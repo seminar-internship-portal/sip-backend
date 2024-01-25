@@ -5,3 +5,20 @@
 *.env
 .env
 .env.*
+
+
+# Ignore build output
+build
+dist
+out
+*.out.js
+
+# Ignore TypeScript declaration files
+*.d.ts
+
+# Ignore Next.js build and cache folders
+.next
+.cache
+
+# Ignore README
+README.md
