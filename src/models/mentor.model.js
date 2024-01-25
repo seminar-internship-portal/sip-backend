@@ -8,7 +8,6 @@ const mentorSchema = new Schema(
       unique: true,
       lowercase: true,
       trim: true,
-      index: true,
     },
     email: {
       type: String,
@@ -27,13 +26,18 @@ const mentorSchema = new Schema(
       type: String,
       required: [true, "Password is required"],
     },
-    avatar: {
-      type: String, //cloudinary URL
+    mobileNo: {
+      type: String,
       required: true,
     },
-    // roleType: {
-
-    // },
+    avatar: {
+      type: String, //cloudinary URL
+      // required: true,
+    },
+    roleType: {
+      type: String,
+      // required: true,
+    },
     students: [
       {
         type: Schema.Types.ObjectId,

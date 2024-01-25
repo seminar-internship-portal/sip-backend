@@ -10,7 +10,6 @@ const studentSchema = new Schema(
       unique: true,
       lowercase: true,
       trim: true,
-      index: true,
     },
     email: {
       type: String,
@@ -27,17 +26,43 @@ const studentSchema = new Schema(
     },
     avatar: {
       type: String, //cloudinary URL
+    },
+    mobileNo: {
+      type: String,
       required: true,
     },
-    // roleType: {
-
-    // },
+    rollNo: {
+      type: String,
+      required: true,
+      index: true,
+    },
+    prnNo: {
+      type: String,
+      required: true,
+    },
+    registrationId: {
+      type: String,
+      required: true,
+      index: true,
+    },
+    roleType: {
+      type: String,
+      // required: true,
+    },
     password: {
       type: String,
       required: [true, "Password is required"],
     },
     refreshToken: {
       type: String,
+    },
+    SeminarInfo: {
+      type: Schema.Types.ObjectId,
+      ref: "SeminarInfo", //! check in future
+    },
+    internshipInfo: {
+      type: Schema.Types.ObjectId,
+      ref: "InternshipInfo",
     },
   },
   {

@@ -1,13 +1,32 @@
 import mongoose, { Schema } from "mongoose";
 
-const internshipFilesSchema = new Schema(
-  {},
+const internshipSchema = new Schema(
+  {
+    companyName: {
+      type: String,
+    },
+    noc: {
+      type: String,
+    },
+    offerLetter: {
+      type: String,
+    },
+    completionLetter: {
+      type: String,
+    },
+    status: {
+      type: String,
+    },
+    marks: {
+      type: Number,
+    },
+  },
   {
     timestamps: true,
   }
 );
 
-export const InternshipFiles = mongoose.model(
-  "InternshipFiles",
-  internshipFilesSchema
+export const InternshipInfo = mongoose.model(
+  "InternshipInfo",
+  internshipSchema
 );
