@@ -3,7 +3,6 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { Student } from "../models/student.model.js";
 
-import studentData from "../data.js";
 const getAllStudents = asyncHandler(async (req, res) => {
   const students = await Student.find({});
   const studentData = students.map((stud) => {
