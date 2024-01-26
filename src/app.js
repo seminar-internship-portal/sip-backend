@@ -17,7 +17,10 @@ app.use(express.static("public"));
 app.use(cookieParser());
 
 //routes
-import studentRouter from "../src/routes/student.routes.js";
-app.use("/api/v1", studentRouter);
+import studentRouter from "./routes/student.routes.js";
+import mentorRouter from "./routes/mentor.routes.js";
+
+app.use("/api/v1/student", studentRouter);
+app.use("/api/v1/mentor", mentorRouter);
 
 export { app };
