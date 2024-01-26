@@ -1,6 +1,7 @@
 import express, { urlencoded } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import globalErrorHandler from "./middlewares/globalErrorHandler.middleware.js";
 
 const app = express();
 
@@ -23,4 +24,5 @@ import mentorRouter from "./routes/mentor.routes.js";
 app.use("/api/v1/student", studentRouter);
 app.use("/api/v1/mentor", mentorRouter);
 
+app.use(globalErrorHandler);
 export { app };
