@@ -32,6 +32,22 @@ const registerStudent = asyncHandler(async (req, res) => {
     password,
   } = req.body;
 
+  //valdiations
+  if (
+    [
+      fullName,
+      username,
+      email,
+      password,
+      prnNo,
+      mobileNo,
+      rollNo,
+      registrationId,
+    ].some((field) => field?.trim() === "")
+  ) {
+    throw new ApiError(400, "All fields are required");
+  }
+
   const existingStudent = await Student.findOne({
     $or: [{ username }, { email }, { prnNo }, { registrationId }],
   });
@@ -41,7 +57,7 @@ const registerStudent = asyncHandler(async (req, res) => {
   }
 
   const stud = await Student.create({
-    username: username.toLowerCase(),
+    username: username,
     email,
     fullName,
     avatar,
@@ -52,7 +68,11 @@ const registerStudent = asyncHandler(async (req, res) => {
     password,
   });
 
-  if (!stud) {
+  const createdStud = await Student.findById(stud._id).select(
+    "-password -refreshToken"
+  );
+
+  if (!createdStud) {
     throw new ApiError(
       500,
       "Something went wrong while registering the student"
@@ -61,7 +81,7 @@ const registerStudent = asyncHandler(async (req, res) => {
 
   res
     .status(200)
-    .json(new ApiResponse(200, stud, "Student registered Successfully"));
+    .json(new ApiResponse(200, createdStud, "Student registered Successfully"));
 });
 
 export { getAllStudents as getData, registerStudent };

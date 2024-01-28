@@ -28,6 +28,17 @@ const registerMentor = asyncHandler(async (req, res) => {
     avatar,
   } = req.body;
 
+  console.log(username);
+
+  //valdiations
+  if (
+    [fullName, username, email, password, mobileNo, registrationId].some(
+      (field) => !field || field.trim() === ""
+    )
+  ) {
+    throw new ApiError(400, "All fields are required");
+  }
+
   const existingMentor = await Mentor.findOne({
     $or: [{ username }, { email }, { registrationId }],
   });
@@ -37,7 +48,7 @@ const registerMentor = asyncHandler(async (req, res) => {
   }
 
   const mentor = await Mentor.create({
-    username: username.toLowerCase(),
+    username: username,
     email,
     registrationId,
     fullName,
@@ -46,7 +57,11 @@ const registerMentor = asyncHandler(async (req, res) => {
     avatar,
   });
 
-  if (!mentor) {
+  const createdMentor = await Mentor.findById(mentor._id).select(
+    "-password -refreshToken"
+  );
+
+  if (!createdMentor) {
     throw new ApiError(
       500,
       "Something went wrong while registering the mentor"
@@ -55,7 +70,9 @@ const registerMentor = asyncHandler(async (req, res) => {
 
   res
     .status(200)
-    .json(new ApiResponse(200, mentor, "Mentor registered successfully"));
+    .json(
+      new ApiResponse(200, createdMentor, "Mentor registered successfully")
+    );
 });
 
 export { getAllMentors, registerMentor };
