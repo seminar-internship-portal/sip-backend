@@ -66,7 +66,7 @@ const registerMentor = asyncHandler(async (req, res) => {
   }
 
   const mentor = await Mentor.create({
-    username: username,
+    username: username.toLowerCase(),
     email,
     registrationId,
     fullName,

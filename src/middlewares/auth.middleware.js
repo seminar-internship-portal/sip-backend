@@ -17,6 +17,7 @@ export const verifyJWT = asyncHandler(async (req, _, next) => {
     const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
 
     let userModel;
+    console.log(decodedToken.roleType);
     if (decodedToken.roleType === "student") {
       userModel = Student;
     } else if (decodedToken.roleType === "mentor") {
@@ -32,7 +33,7 @@ export const verifyJWT = asyncHandler(async (req, _, next) => {
       throw new ApiError(401, "Invalid Access Token!");
     }
 
-    req.user = user; //req.mesh = user; -> also works lol
+    req.user = user;
     next();
   } catch (error) {
     throw new ApiError(401, error?.message || "Invalid access token");

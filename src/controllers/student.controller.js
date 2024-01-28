@@ -75,7 +75,7 @@ const registerStudent = asyncHandler(async (req, res) => {
   }
 
   const stud = await Student.create({
-    username: username,
+    username: username.toLowerCase(),
     email,
     fullName,
     avatar,
@@ -84,6 +84,7 @@ const registerStudent = asyncHandler(async (req, res) => {
     prnNo,
     registrationId,
     password,
+    roleType: "student",
   });
 
   const createdStud = await Student.findById(stud._id).select(
@@ -174,6 +175,72 @@ const logoutStudent = asyncHandler(async (req, res) => {
     .clearCookie("refreshToken", options)
     .json(200, new ApiResponse(200, {}, "Student Logged out Successfully!"));
 });
+
+/*
+
+const refreshAccessToken = asyncHandler(async (req, res) => {
+  const incomingRefreshToken = req.cookie.refreshToken || req.body.refreshToken;
+  //req.body wala is for mobile devices
+  if (!incomingRefreshToken) {
+    throw new ApiError(401, "Unauthorized  request!");
+  }
+
+  try {
+    const decodedToken = jwt.verify(
+      incomingRefreshToken,
+      process.env.REFRESH_TOKEN_SECRET
+    );
+
+    const user = await User.findById(decodedToken?._id);
+    if (!user) {
+      throw new ApiError(401, "Invalid refresh token");
+    }
+
+    //now incoming wala verify it with db wala
+    if (incomingRefreshToken !== user?.refreshToken) {
+      throw new ApiError(401, "Refresh token is expired!");
+    }
+
+    const options = {
+      httpOnly: true,
+      secure: true,
+    };
+
+    const { rt, at } = await generateAccessAndRefreshTokens(user._id);
+    return res
+      .status(200)
+      .cookie("accessToken", at, options)
+      .cookie("refreshToken", rt, options)
+      .json(
+        new ApiResponse(
+          200,
+          { accessToken, refreshToken: rt },
+          "Access Token Refreshed!"
+        )
+      );
+  } catch (error) {
+    throw new ApiError(401, error?.message || "Invalid Refresh Token");
+  }
+});
+
+const changeCurrentPassword = asyncHandler(async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+  //is password changing so logged in -> and we have written auth.middleware req.user = user
+  const user = await User.findById(req.user?.id);
+  const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
+  if (!isPasswordCorrect) {
+    throw new ApiError(400, "Invalid old Password");
+  }
+
+  user.password = newPassword;
+  await user.save({ validateBeforeSave: false }); //before save pre wala hook will run & hash the pass
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Password changed Successfully!"));
+});
+
+*/
 
 export {
   getAllStudents as getData,

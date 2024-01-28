@@ -47,7 +47,6 @@ const studentSchema = new Schema(
     },
     roleType: {
       type: String,
-      enum: ["student", "mentor"],
     },
     password: {
       type: String,
@@ -101,6 +100,7 @@ studentSchema.methods.generateRefreshToken = function () {
   return jwt.sign(
     {
       _id: this._id,
+      roleType: this.roleType,
     },
     process.env.REFRESH_TOKEN_SECRET,
     {
