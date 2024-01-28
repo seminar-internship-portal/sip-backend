@@ -47,7 +47,7 @@ const studentSchema = new Schema(
     },
     roleType: {
       type: String,
-      // required: true,
+      enum: ["student", "mentor"],
     },
     password: {
       type: String,
@@ -88,6 +88,7 @@ studentSchema.methods.generateAccessToken = function () {
       email: this.email,
       username: this.username,
       fullName: this.fullName,
+      roleType: this.roleType,
     },
     process.env.ACCESS_TOKEN_SECRET,
     {

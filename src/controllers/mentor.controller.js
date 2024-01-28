@@ -1,5 +1,5 @@
 import { Mentor } from "../models/mentor.model.js";
-import { asyncHandler } from "../utils/asynchandler.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
@@ -141,4 +141,29 @@ const loginMentor = asyncHandler(async (req, res) => {
     );
 });
 
-export { getAllMentors, registerMentor, loginMentor };
+const logoutMentor = asyncHandler(async (req, res) => {
+  await Mentor.findByIdAndUpdate(
+    req.mentor._id,
+    {
+      $set: {
+        refreshToken: undefined,
+      },
+    },
+    {
+      new: true, // after return ull get new value of data not old
+    }
+  );
+
+  const options = {
+    httpOnly: true,
+    secure: true,
+  };
+
+  return res
+    .status(200)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
+    .json(200, new ApiResponse(200, {}, "Mentor Logged out Successfully!"));
+});
+
+export { getAllMentors, registerMentor, loginMentor, logoutMentor };

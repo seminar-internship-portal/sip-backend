@@ -1,4 +1,4 @@
-import { asyncHandler } from "../utils/asynchandler.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { Student } from "../models/student.model.js";
@@ -150,4 +150,34 @@ const loginStudent = asyncHandler(async (req, res) => {
     );
 });
 
-export { getAllStudents as getData, registerStudent, loginStudent };
+const logoutStudent = asyncHandler(async (req, res) => {
+  await Student.findByIdAndUpdate(
+    req.student._id,
+    {
+      $set: {
+        refreshToken: undefined,
+      },
+    },
+    {
+      new: true, // after return ull get new value of data not old
+    }
+  );
+
+  const options = {
+    httpOnly: true,
+    secure: true,
+  };
+
+  return res
+    .status(200)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
+    .json(200, new ApiResponse(200, {}, "Student Logged out Successfully!"));
+});
+
+export {
+  getAllStudents as getData,
+  registerStudent,
+  loginStudent,
+  logoutStudent,
+};
