@@ -25,6 +25,7 @@ const getAllStudents = asyncHandler(async (req, res) => {
   const students = await Student.find({});
   const studentData = students.map((stud) => {
     return {
+      id: stud._id,
       username: stud.username,
       email: stud.email,
       fullName: stud.fullName,

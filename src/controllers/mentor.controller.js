@@ -25,6 +25,7 @@ const getAllMentors = asyncHandler(async (req, res) => {
   const mentors = await Mentor.find({});
   const mentorData = mentors.map((ment) => {
     return {
+      id: ment._id,
       username: ment.username,
       email: ment.email,
       registrationId: ment.registrationId,
