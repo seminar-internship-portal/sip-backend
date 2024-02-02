@@ -9,7 +9,8 @@ const generateAccessAndRefreshTokens = async (mentorId) => {
     const accessToken = mentor.generateAccessToken();
     const refreshToken = mentor.generateRefreshToken();
 
-    mentor.refreshToken = refreshToken; //db mai dalenge na
+    mentor.refreshToken = refreshToken; //sav inside db
+    console.log(mentor.refreshToken);
     await mentor.save({ validateBeforeSave: false }); //save in db w/o validating or else password will be replaced
 
     return { accessToken, refreshToken };
@@ -74,6 +75,7 @@ const registerMentor = asyncHandler(async (req, res) => {
     password,
     mobileNo,
     avatar,
+    roleType: "mentor",
   });
 
   const createdMentor = await Mentor.findById(mentor._id).select(
@@ -96,7 +98,7 @@ const registerMentor = asyncHandler(async (req, res) => {
 
 const loginMentor = asyncHandler(async (req, res) => {
   const { username, email, password } = req.body;
-  if (!username && !email) {
+  if (!username || !email) {
     throw new ApiError(400, "username or email is required!");
   }
 
@@ -116,7 +118,7 @@ const loginMentor = asyncHandler(async (req, res) => {
   const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
     mentor._id
   );
-
+  // console.log(accessToken, refreshToken);
   const loggedInMentor = await Mentor.findById(mentor._id).select(
     "-password -refreshToken"
   );
