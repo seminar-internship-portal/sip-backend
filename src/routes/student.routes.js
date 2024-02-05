@@ -4,12 +4,15 @@ import {
   registerStudent,
   loginStudent,
   logoutStudent,
+  getIndividualStudent,
 } from "../controllers/student.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
 router.route("/").get(getData);
+router.route("/:uniqueId").get(getIndividualStudent);
+
 router.route("/register").post(registerStudent);
 router.route("/login").post(loginStudent);
 

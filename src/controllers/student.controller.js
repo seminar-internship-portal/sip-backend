@@ -38,6 +38,21 @@ const getAllStudents = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, studentData));
 });
 
+const getIndividualStudent = asyncHandler(async (req, res) => {
+  const idToFind = req.params?.uniqueId;
+  const student = await Student.findById(idToFind).select(
+    "-password -refreshToken"
+  );
+  console.log(student);
+  if (!student) {
+    throw new ApiError(401, "Student does not exist");
+  }
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, student, "Successfully fetched the data"));
+});
+
 const registerStudent = asyncHandler(async (req, res) => {
   const {
     username,
@@ -248,4 +263,5 @@ export {
   registerStudent,
   loginStudent,
   logoutStudent,
+  getIndividualStudent,
 };
