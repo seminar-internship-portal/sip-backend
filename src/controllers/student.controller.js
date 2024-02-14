@@ -2,6 +2,9 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { Student } from "../models/student.model.js";
+import { StudentEvaluation } from "../models/studentEvaluation.model.js";
+import { Types } from "mongoose";
+import { EvaluationCriteria } from "../models/evaluationCriteria.model.js";
 
 const generateAccessAndRefreshTokens = async (studentId) => {
   try {
@@ -205,6 +208,41 @@ const logoutStudent = asyncHandler(async (req, res) => {
     .json(200, new ApiResponse(200, {}, "Student Logged out Successfully!"));
 });
 
+const getStudentMarks = asyncHandler(async (req, res) => {
+  const studId = req.params.studId;
+  const student = await Student.findById(studId);
+
+  if (!student) {
+    throw new ApiError(404, "Student not found.");
+  }
+
+  const stud = await StudentEvaluation.findOne({
+    studentId: studId,
+  });
+
+  const studMarks = stud.marksAssigned;
+  const studMarksWithCriteriaInfo = await getCriteriaInfo(studMarks);
+
+  res.status(200).json(new ApiResponse(200, studMarksWithCriteriaInfo));
+});
+
+async function getCriteriaInfo(criteriasMarks) {
+  const criteriaInfoPromises = criteriasMarks.map(async (criteria) => {
+    const id = criteria.evaluationCriteria;
+    const criteriaDetails = await EvaluationCriteria.findOne({ _id: id });
+
+    return {
+      criteriaId: id,
+      criteriaName: criteriaDetails.name,
+      studCriteriaMarks: criteria.marks,
+      criteriaTotalMarks: criteriaDetails.criteriaMarks,
+    };
+  });
+
+  const criteriaInfo = await Promise.all(criteriaInfoPromises);
+  return criteriaInfo;
+}
+
 /*
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
@@ -279,4 +317,5 @@ export {
   loginStudent,
   logoutStudent,
   getIndividualStudent,
+  getStudentMarks,
 };

@@ -2,6 +2,8 @@ import { Mentor } from "../models/mentor.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import { Student } from "../models/student.model.js";
+import { StudentEvaluation } from "../models/studentEvaluation.model.js";
 
 const generateAccessAndRefreshTokens = async (mentorId) => {
   try {
@@ -169,4 +171,34 @@ const logoutMentor = asyncHandler(async (req, res) => {
     .json(200, new ApiResponse(200, {}, "Mentor Logged out Successfully!"));
 });
 
-export { getAllMentors, registerMentor, loginMentor, logoutMentor };
+const evaluateStudent = asyncHandler(async (req, res) => {
+  const studId = req.params.studId;
+  const marks = req.body;
+
+  const student = await Student.findById(studId);
+
+  if (!student) {
+    throw new ApiError(404, "Student not found.");
+  }
+
+  const evaluatedStud = await StudentEvaluation.findOneAndUpdate(
+    { studentId: studId },
+    {
+      studentId: studId,
+      marksAssigned: marks,
+    },
+    { upsert: true, new: true }
+  );
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, evaluatedStud, "Marks Assigned Successfully"));
+});
+
+export {
+  getAllMentors,
+  registerMentor,
+  loginMentor,
+  logoutMentor,
+  evaluateStudent,
+};
