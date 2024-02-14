@@ -24,6 +24,9 @@ const studentSchema = new Schema(
       trim: true,
       index: true,
     },
+    academicYear: {
+      type: String,
+    },
     avatar: {
       type: String, //cloudinary URL
     },

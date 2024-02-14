@@ -22,7 +22,17 @@ const generateAccessAndRefreshTokens = async (studentId) => {
 };
 
 const getAllStudents = asyncHandler(async (req, res) => {
-  const students = await Student.find({});
+  const year = req.query.year;
+
+  let students;
+  if (!year) {
+    students = await Student.find({});
+  } else {
+    students = await Student.find({
+      academicYear: year,
+    });
+  }
+
   const studentData = students.map((stud) => {
     return {
       id: stud._id,
@@ -43,7 +53,7 @@ const getIndividualStudent = asyncHandler(async (req, res) => {
   const student = await Student.findById(idToFind).select(
     "-password -refreshToken"
   );
-  console.log(student);
+
   if (!student) {
     throw new ApiError(401, "Student does not exist");
   }
@@ -58,6 +68,7 @@ const registerStudent = asyncHandler(async (req, res) => {
     username,
     email,
     fullName,
+    academicYear,
     avatar,
     mobileNo,
     rollNo,
@@ -70,6 +81,7 @@ const registerStudent = asyncHandler(async (req, res) => {
   if (
     [
       fullName,
+      academicYear,
       username,
       email,
       password,
@@ -94,6 +106,7 @@ const registerStudent = asyncHandler(async (req, res) => {
     username: username.toLowerCase(),
     email,
     fullName,
+    academicYear,
     avatar,
     mobileNo,
     rollNo,
