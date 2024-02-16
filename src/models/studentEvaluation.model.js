@@ -5,6 +5,7 @@ const studentEvaluation = new Schema({
     type: Schema.Types.ObjectId,
     ref: "Student",
   },
+  evalType: String,
   marksAssigned: [
     {
       evaluationCriteria: {

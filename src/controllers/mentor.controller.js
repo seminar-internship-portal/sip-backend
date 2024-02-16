@@ -4,6 +4,8 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { Student } from "../models/student.model.js";
 import { StudentEvaluation } from "../models/studentEvaluation.model.js";
+import { SeminarEvaluationCriteria } from "../models/seminarEvaluationCriteria.model.js";
+import { InternshipEvaluationCriteria } from "../models/internshipEvaluationCriteria.model.js";
 
 const generateAccessAndRefreshTokens = async (mentorId) => {
   try {
@@ -171,29 +173,52 @@ const logoutMentor = asyncHandler(async (req, res) => {
     .json(200, new ApiResponse(200, {}, "Mentor Logged out Successfully!"));
 });
 
-const evaluateStudent = asyncHandler(async (req, res) => {
-  const studId = req.params.studId;
-  const marks = req.body;
+const evaluateStudent = (evalType) => {
+  return asyncHandler(async (req, res) => {
+    const studId = req.params.studId;
+    const marks = req.body;
 
-  const student = await Student.findById(studId);
+    let evalCriteria;
+    if (evalType === "seminar") {
+      for (const mark of marks) {
+        const criteriaId = mark.evaluationCriteria;
+        evalCriteria = await SeminarEvaluationCriteria.findById(criteriaId);
 
-  if (!student) {
-    throw new ApiError(404, "Student not found.");
-  }
+        if (!evalCriteria) {
+          throw new ApiError(404, "Evaluation criteria not found.");
+        }
+      }
+    } else if (evalType === "internship") {
+      for (const mark of marks) {
+        const criteriaId = mark.evaluationCriteria;
+        evalCriteria = await InternshipEvaluationCriteria.findById(criteriaId);
 
-  const evaluatedStud = await StudentEvaluation.findOneAndUpdate(
-    { studentId: studId },
-    {
-      studentId: studId,
-      marksAssigned: marks,
-    },
-    { upsert: true, new: true }
-  );
+        if (!evalCriteria) {
+          throw new ApiError(404, "Evaluation criteria not found.");
+        }
+      }
+    }
 
-  res
-    .status(200)
-    .json(new ApiResponse(200, evaluatedStud, "Marks Assigned Successfully"));
-});
+    const student = await Student.findById(studId);
+
+    if (!student) {
+      throw new ApiError(404, "Student not found.");
+    }
+
+    const evaluatedStud = await StudentEvaluation.findOneAndUpdate(
+      { studentId: studId, evalType },
+      {
+        studentId: studId,
+        marksAssigned: marks,
+      },
+      { upsert: true, new: true }
+    );
+
+    res
+      .status(200)
+      .json(new ApiResponse(200, evaluatedStud, "Marks Assigned Successfully"));
+  });
+};
 
 export {
   getAllMentors,

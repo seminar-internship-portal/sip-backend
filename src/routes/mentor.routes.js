@@ -12,7 +12,8 @@ const router = new Router();
 router.route("/").get(getAllMentors);
 router.route("/register").post(registerMentor);
 router.route("/login").post(loginMentor);
-router.route("/evaluate/:studId").post(evaluateStudent);
+router.route("/seminar/evaluate/:studId").post(evaluateStudent("seminar"));
+router.route("/internship/evaluate/:studId").post(evaluateStudent("internship"));
 
 // secured routes
 router.route("/logout").post(verifyJWT, logoutMentor);

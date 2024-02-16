@@ -12,7 +12,8 @@ import { verifyJWT } from "../middlewares/auth.middleware.js";
 const router = Router();
 
 router.route("/").get(getData);
-router.route("/:studId/marks").get(getStudentMarks);
+router.route("/:studId/seminar/marks").get(getStudentMarks("seminar"));
+router.route("/:studId/internship/marks").get(getStudentMarks("internship"));
 router.route("/:uniqueId").get(getIndividualStudent);
 
 router.route("/register").post(registerStudent);
