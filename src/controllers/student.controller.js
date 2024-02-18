@@ -217,7 +217,45 @@ const getStudentMarks = (evalType) => {
       throw new ApiError(404, "Student not found.");
     }
 
-    const stud = await StudentEvaluation.findOne({
+    let stud = await StudentEvaluation.findOne({
+      studentId: studId,
+      evalType,
+    });
+
+    // if student evaluation not done yet then assign 0 marks
+    if (!stud) {
+      if (evalType === "seminar") {
+        const evalCriterias = await SeminarEvaluationCriteria.find({});
+        const marksAssigned = evalCriterias.map((criteria) => {
+          return { evaluationCriteria: criteria._id, marks: 0 };
+        });
+
+        await StudentEvaluation.findOneAndUpdate(
+          { studentId: studId, evalType },
+          {
+            studentId: studId,
+            marksAssigned,
+          },
+          { upsert: true, new: true }
+        );
+      } else if (evalType === "internship") {
+        const evalCriterias = await InternshipEvaluationCriteria.find({});
+        const marksAssigned = evalCriterias.map((criteria) => {
+          return { evaluationCriteria: criteria._id, marks: 0 };
+        });
+
+        await StudentEvaluation.findOneAndUpdate(
+          { studentId: studId, evalType },
+          {
+            studentId: studId,
+            marksAssigned,
+          },
+          { upsert: true, new: true }
+        );
+      }
+    }
+
+    stud = await StudentEvaluation.findOne({
       studentId: studId,
       evalType,
     });
