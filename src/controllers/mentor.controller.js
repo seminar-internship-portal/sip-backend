@@ -187,6 +187,13 @@ const evaluateStudent = (evalType) => {
         if (!evalCriteria) {
           throw new ApiError(404, "Evaluation criteria not found.");
         }
+
+        if (mark.marks > evalCriteria.criteriaMarks) {
+          throw new ApiError(
+            400,
+            `${evalCriteria.name} has maximum total marks of ${evalCriteria.criteriaMarks}`
+          );
+        }
       }
     } else if (evalType === "internship") {
       for (const mark of marks) {
@@ -195,6 +202,13 @@ const evaluateStudent = (evalType) => {
 
         if (!evalCriteria) {
           throw new ApiError(404, "Evaluation criteria not found.");
+        }
+
+        if (mark.marks > evalCriteria.criteriaMarks) {
+          throw new ApiError(
+            400,
+            `${evalCriteria.name} has maximum total marks of ${evalCriteria.criteriaMarks}`
+          );
         }
       }
     }
