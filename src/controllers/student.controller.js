@@ -170,6 +170,7 @@ const loginStudent = asyncHandler(async (req, res) => {
     .status(200)
     .cookie("accessToken", accessToken, options)
     .cookie("refreshToken", refreshToken, options)
+    .cookie("role_type", "student")
     .json(
       new ApiResponse(
         200,
@@ -205,6 +206,8 @@ const logoutStudent = asyncHandler(async (req, res) => {
     .status(200)
     .clearCookie("accessToken", options)
     .clearCookie("refreshToken", options)
+    .clearCookie("role_type")
+
     .json(200, new ApiResponse(200, {}, "Student Logged out Successfully!"));
 });
 
@@ -340,26 +343,60 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   }
 });
 
+
+
+*/
+
+const updateAccountDetails = asyncHandler(async (req, res) => {
+  const { fullName, email, avatar, mobileNo } = req.body;
+
+  if (!fullName && !email) {
+    throw new ApiError(401, "Both FullName or Email are required");
+  }
+
+  const updateFields = {
+    fullName,
+    ...(email && { email }),
+    ...(avatar && { avatar }),
+    ...(mobileNo && { mobileNo }),
+  };
+
+  const student = await Student.findByIdAndUpdate(
+    req.student?._id,
+    {
+      $set: updateFields,
+    },
+    {
+      new: true,
+    }
+  ).select("-password");
+
+  if (!student) {
+    throw new ApiError(402, "Student does not exist");
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, student, "Account Details changed successfully!")
+    );
+});
+
 const changeCurrentPassword = asyncHandler(async (req, res) => {
   const { oldPassword, newPassword } = req.body;
-  //is password changing so logged in -> and we have written auth.middleware req.user = user
-  const user = await User.findById(req.user?.id);
-  const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
+  const stud = await Student.findById(req.user?.id);
+  const isPasswordCorrect = await stud.isPasswordCorrect(oldPassword);
   if (!isPasswordCorrect) {
     throw new ApiError(400, "Invalid old Password");
   }
 
-  user.password = newPassword;
-  await user.save({ validateBeforeSave: false }); //before save pre wala hook will run & hash the pass
+  stud.password = newPassword;
+  await stud.save({ validateBeforeSave: false });
 
   return res
     .status(200)
     .json(new ApiResponse(200, {}, "Password changed Successfully!"));
 });
-
-*/
-
-//maybe ikl do it
 
 export {
   getAllStudents as getData,
@@ -368,4 +405,6 @@ export {
   logoutStudent,
   getIndividualStudent,
   getStudentMarks,
+  changeCurrentPassword,
+  updateAccountDetails,
 };

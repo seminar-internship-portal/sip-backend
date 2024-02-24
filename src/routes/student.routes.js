@@ -6,6 +6,8 @@ import {
   logoutStudent,
   getIndividualStudent,
   getStudentMarks,
+  changeCurrentPassword,
+  updateAccountDetails,
 } from "../controllers/student.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
@@ -21,5 +23,7 @@ router.route("/login").post(loginStudent);
 
 //secured routes - > logout and accesstoken wale
 router.route("/logout").post(verifyJWT, logoutStudent);
+router.route("/changePassword").post(verifyJWT, changeCurrentPassword);
+router.route("/updateAccountDetails").post(verifyJWT, updateAccountDetails);
 
 export default router;

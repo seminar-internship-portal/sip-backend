@@ -13,9 +13,9 @@ const generateAccessAndRefreshTokens = async (mentorId) => {
     const accessToken = mentor.generateAccessToken();
     const refreshToken = mentor.generateRefreshToken();
 
-    mentor.refreshToken = refreshToken; //sav inside db
+    mentor.refreshToken = refreshToken;
     console.log(mentor.refreshToken);
-    await mentor.save({ validateBeforeSave: false }); //save in db w/o validating or else password will be replaced
+    await mentor.save({ validateBeforeSave: false });
 
     return { accessToken, refreshToken };
   } catch (err) {
@@ -135,6 +135,7 @@ const loginMentor = asyncHandler(async (req, res) => {
     .status(200)
     .cookie("accessToken", accessToken, options)
     .cookie("refreshToken", refreshToken, options)
+    .cookie("role_type", "mentor")
     .json(
       new ApiResponse(
         200,
@@ -170,6 +171,7 @@ const logoutMentor = asyncHandler(async (req, res) => {
     .status(200)
     .clearCookie("accessToken", options)
     .clearCookie("refreshToken", options)
+    .clearCookie("role_type")
     .json(200, new ApiResponse(200, {}, "Mentor Logged out Successfully!"));
 });
 
@@ -220,10 +222,44 @@ const evaluateStudent = (evalType) => {
   });
 };
 
+// individual mentor
+const getIndividualMentor = asyncHandler(async (req, res) => {
+  const idToFind = req.params?.uniqueId;
+  const mentor = await Mentor.findById(idToFind).select(
+    "-password -refreshToken"
+  );
+
+  if (!mentor) {
+    throw new ApiError(401, "Mentor does not exist");
+  }
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, mentor, "Successfully fetched the data"));
+});
+
+const changeCurrentPassword = asyncHandler(async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+  const mentor = await Mentor.findById(req.user?.id);
+  const isPasswordCorrect = await mentor.isPasswordCorrect(oldPassword);
+  if (!isPasswordCorrect) {
+    throw new ApiError(400, "Invalid old Password");
+  }
+
+  mentor.password = newPassword;
+  await mentor.save({ validateBeforeSave: false });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Password changed Successfully!"));
+});
+
 export {
   getAllMentors,
   registerMentor,
   loginMentor,
   logoutMentor,
   evaluateStudent,
+  getIndividualMentor,
+  changeCurrentPassword,
 };

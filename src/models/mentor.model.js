@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 
 const mentorSchema = new Schema(
@@ -85,7 +86,7 @@ mentorSchema.methods.generateAccessToken = function () {
       }
     );
   } catch (error) {
-    console.log("err in at");
+    console.log("err in at", error);
   }
 };
 
@@ -102,7 +103,7 @@ mentorSchema.methods.generateRefreshToken = function () {
       }
     );
   } catch (error) {
-    console.log("error in rt");
+    console.log("error in rt", error);
   }
 };
 
