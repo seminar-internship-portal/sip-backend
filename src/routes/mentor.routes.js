@@ -7,6 +7,7 @@ import {
   evaluateStudent,
   getIndividualMentor,
   changeCurrentPassword,
+  updateAccountDetails,
 } from "../controllers/mentor.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
@@ -23,5 +24,6 @@ router.route("/:uniqueId").get(getIndividualMentor);
 // secured routes
 router.route("/logout").post(verifyJWT, logoutMentor);
 router.route("/changePassword").post(verifyJWT, changeCurrentPassword);
+router.route("/updateAccountDetails").post(verifyJWT, updateAccountDetails);
 
 export default router;

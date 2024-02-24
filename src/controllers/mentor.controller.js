@@ -151,7 +151,7 @@ const loginMentor = asyncHandler(async (req, res) => {
 
 const logoutMentor = asyncHandler(async (req, res) => {
   await Mentor.findByIdAndUpdate(
-    req.mentor._id,
+    req.user._id,
     {
       $set: {
         refreshToken: undefined,
@@ -268,6 +268,39 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, "Password changed Successfully!"));
 });
 
+const updateAccountDetails = asyncHandler(async (req, res) => {
+  const { fullName, email, avatar, mobileNo } = req.body;
+
+  if (!fullName && !email) {
+    throw new ApiError(401, "Either FullName or Email are required");
+  }
+
+  const updateFields = {
+    fullName,
+    ...(email && { email }),
+    ...(avatar && { avatar }),
+    ...(mobileNo && { mobileNo }),
+  };
+
+  const ment = await Mentor.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: updateFields,
+    },
+    {
+      new: true,
+    }
+  ).select("-password");
+
+  if (!ment) {
+    throw new ApiError(402, "Mentor does not exist");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, ment, "Account Details changed successfully!"));
+});
+
 export {
   getAllMentors,
   registerMentor,
@@ -276,4 +309,5 @@ export {
   evaluateStudent,
   getIndividualMentor,
   changeCurrentPassword,
+  updateAccountDetails,
 };

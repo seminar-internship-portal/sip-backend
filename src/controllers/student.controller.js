@@ -186,14 +186,14 @@ const loginStudent = asyncHandler(async (req, res) => {
 
 const logoutStudent = asyncHandler(async (req, res) => {
   await Student.findByIdAndUpdate(
-    req.student._id,
+    req.user._id,
     {
       $set: {
         refreshToken: undefined,
       },
     },
     {
-      new: true, // after return ull get new value of data not old
+      new: true, // return the updated document
     }
   );
 
@@ -204,8 +204,8 @@ const logoutStudent = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .clearCookie("accessToken", options)
-    .clearCookie("refreshToken", options)
+    .clearCookie("accessToken")
+    .clearCookie("refreshToken")
     .clearCookie("role_type")
 
     .json(200, new ApiResponse(200, {}, "Student Logged out Successfully!"));
@@ -295,63 +295,13 @@ async function getCriteriaInfo(evalType, criteriasMarks) {
   const criteriaInfo = await Promise.all(criteriaInfoPromises);
   return criteriaInfo;
 }
-
-/*
-
-const refreshAccessToken = asyncHandler(async (req, res) => {
-  const incomingRefreshToken = req.cookie.refreshToken || req.body.refreshToken;
-  //req.body wala is for mobile devices
-  if (!incomingRefreshToken) {
-    throw new ApiError(401, "Unauthorized  request!");
-  }
-
-  try {
-    const decodedToken = jwt.verify(
-      incomingRefreshToken,
-      process.env.REFRESH_TOKEN_SECRET
-    );
-
-    const user = await User.findById(decodedToken?._id);
-    if (!user) {
-      throw new ApiError(401, "Invalid refresh token");
-    }
-
-    //now incoming wala verify it with db wala
-    if (incomingRefreshToken !== user?.refreshToken) {
-      throw new ApiError(401, "Refresh token is expired!");
-    }
-
-    const options = {
-      httpOnly: true,
-      secure: true,
-    };
-
-    const { rt, at } = await generateAccessAndRefreshTokens(user._id);
-    return res
-      .status(200)
-      .cookie("accessToken", at, options)
-      .cookie("refreshToken", rt, options)
-      .json(
-        new ApiResponse(
-          200,
-          { accessToken, refreshToken: rt },
-          "Access Token Refreshed!"
-        )
-      );
-  } catch (error) {
-    throw new ApiError(401, error?.message || "Invalid Refresh Token");
-  }
-});
-
-
-
-*/
+// ---------------------------------------------------------------------------------------
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
   const { fullName, email, avatar, mobileNo } = req.body;
 
   if (!fullName && !email) {
-    throw new ApiError(401, "Both FullName or Email are required");
+    throw new ApiError(401, "Either FullName or Email are required");
   }
 
   const updateFields = {
@@ -362,7 +312,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
   };
 
   const student = await Student.findByIdAndUpdate(
-    req.student?._id,
+    req.user?._id,
     {
       $set: updateFields,
     },
