@@ -14,7 +14,7 @@ const generateAccessAndRefreshTokens = async (mentorId) => {
     const refreshToken = mentor.generateRefreshToken();
 
     mentor.refreshToken = refreshToken;
-    console.log(mentor.refreshToken);
+    // console.log(mentor.refreshToken);
     await mentor.save({ validateBeforeSave: false });
 
     return { accessToken, refreshToken };
@@ -126,9 +126,9 @@ const loginMentor = asyncHandler(async (req, res) => {
   const loggedInMentor = await Mentor.findById(mentor._id).select(
     "-password -refreshToken"
   );
+
   const options = {
     httpOnly: true,
-    secure: true,
   };
 
   return res
@@ -164,7 +164,6 @@ const logoutMentor = asyncHandler(async (req, res) => {
 
   const options = {
     httpOnly: true,
-    secure: true,
   };
 
   return res
@@ -272,7 +271,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
   const { fullName, email, avatar, mobileNo } = req.body;
 
   if (!fullName && !email) {
-    throw new ApiError(401, "Either FullName or Email are required");
+    throw new ApiError(400, "Either FullName or Email are required");
   }
 
   const updateFields = {
@@ -281,6 +280,10 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     ...(avatar && { avatar }),
     ...(mobileNo && { mobileNo }),
   };
+
+  const oldment = await Mentor.findById(req.user?._id);
+  if (oldment.email != email)
+    throw new ApiError(401, "Unauthorized to update data");
 
   const ment = await Mentor.findByIdAndUpdate(
     req.user?._id,

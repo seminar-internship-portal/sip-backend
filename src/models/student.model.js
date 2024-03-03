@@ -50,6 +50,7 @@ const studentSchema = new Schema(
     },
     roleType: {
       type: String,
+      default: "student",
     },
     password: {
       type: String,

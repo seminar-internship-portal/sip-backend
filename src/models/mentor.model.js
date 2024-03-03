@@ -44,6 +44,7 @@ const mentorSchema = new Schema(
     },
     roleType: {
       type: String,
+      default: "mentor",
     },
     students: [
       {

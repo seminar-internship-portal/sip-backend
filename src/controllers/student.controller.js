@@ -163,7 +163,6 @@ const loginStudent = asyncHandler(async (req, res) => {
   );
   const options = {
     httpOnly: true,
-    secure: true,
   };
 
   return res
@@ -199,13 +198,12 @@ const logoutStudent = asyncHandler(async (req, res) => {
 
   const options = {
     httpOnly: true,
-    secure: true,
   };
 
   return res
     .status(200)
-    .clearCookie("accessToken")
-    .clearCookie("refreshToken")
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
     .clearCookie("role_type")
 
     .json(200, new ApiResponse(200, {}, "Student Logged out Successfully!"));
@@ -310,6 +308,10 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     ...(avatar && { avatar }),
     ...(mobileNo && { mobileNo }),
   };
+
+    const oldStud = await Student.findById(req.user?._id);
+    if (oldStud.email != email)
+      throw new ApiError(401, "Unauthorized to update data");
 
   const student = await Student.findByIdAndUpdate(
     req.user?._id,
