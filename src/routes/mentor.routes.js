@@ -1,7 +1,6 @@
 import { Router } from "express";
 import {
   getAllMentors,
-  registerMentor,
   loginMentor,
   logoutMentor,
   evaluateStudent,
@@ -13,7 +12,7 @@ import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = new Router();
 router.route("/").get(getAllMentors);
-router.route("/register").post(registerMentor);
+// router.route("/register").post(registerMentor);
 router.route("/login").post(loginMentor);
 router.route("/seminar/evaluate/:studId").post(evaluateStudent("seminar"));
 router

@@ -67,6 +67,10 @@ const studentSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "InternshipInfo",
     },
+    mentorAssigned: {
+      type: Schema.Types.ObjectId,
+      ref: "Mentor",
+    },
   },
   {
     timestamps: true,

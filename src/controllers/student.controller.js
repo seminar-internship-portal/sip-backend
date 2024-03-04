@@ -66,75 +66,6 @@ const getIndividualStudent = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, student, "Successfully fetched the data"));
 });
 
-const registerStudent = asyncHandler(async (req, res) => {
-  const {
-    username,
-    email,
-    fullName,
-    academicYear,
-    avatar,
-    mobileNo,
-    rollNo,
-    prnNo,
-    registrationId,
-    password,
-  } = req.body;
-
-  //valdiations
-  if (
-    [
-      fullName,
-      academicYear,
-      username,
-      email,
-      password,
-      prnNo,
-      mobileNo,
-      rollNo,
-      registrationId,
-    ].some((field) => field?.trim() === "")
-  ) {
-    throw new ApiError(400, "All fields are required");
-  }
-
-  const existingStudent = await Student.findOne({
-    $or: [{ username }, { email }, { prnNo }, { registrationId }],
-  });
-
-  if (existingStudent) {
-    throw new ApiError(409, "Student with email or username already exists");
-  }
-
-  const stud = await Student.create({
-    username: username.toLowerCase(),
-    email,
-    fullName,
-    academicYear,
-    avatar,
-    mobileNo,
-    rollNo,
-    prnNo,
-    registrationId,
-    password,
-    roleType: "student",
-  });
-
-  const createdStud = await Student.findById(stud._id).select(
-    "-password -refreshToken"
-  );
-
-  if (!createdStud) {
-    throw new ApiError(
-      500,
-      "Something went wrong while registering the student"
-    );
-  }
-
-  res
-    .status(200)
-    .json(new ApiResponse(200, createdStud, "Student registered Successfully"));
-});
-
 const loginStudent = asyncHandler(async (req, res) => {
   const { username, email, password } = req.body;
   if (!username && !email) {
@@ -309,9 +240,9 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     ...(mobileNo && { mobileNo }),
   };
 
-    const oldStud = await Student.findById(req.user?._id);
-    if (oldStud.email != email)
-      throw new ApiError(401, "Unauthorized to update data");
+  const oldStud = await Student.findById(req.user?._id);
+  if (oldStud.email != email)
+    throw new ApiError(401, "Unauthorized to update data");
 
   const student = await Student.findByIdAndUpdate(
     req.user?._id,

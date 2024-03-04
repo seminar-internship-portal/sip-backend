@@ -41,65 +41,6 @@ const getAllMentors = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, mentorData));
 });
 
-const registerMentor = asyncHandler(async (req, res) => {
-  const {
-    username,
-    email,
-    fullName,
-    registrationId,
-    password,
-    mobileNo,
-    avatar,
-  } = req.body;
-
-  console.log(username);
-
-  //valdiations
-  if (
-    [fullName, username, email, password, mobileNo, registrationId].some(
-      (field) => !field || field.trim() === ""
-    )
-  ) {
-    throw new ApiError(400, "All fields are required");
-  }
-
-  const existingMentor = await Mentor.findOne({
-    $or: [{ username }, { email }, { registrationId }],
-  });
-
-  if (existingMentor) {
-    throw new ApiError(409, "Mentor with email or username already exists");
-  }
-
-  const mentor = await Mentor.create({
-    username: username.toLowerCase(),
-    email,
-    registrationId,
-    fullName,
-    password,
-    mobileNo,
-    avatar,
-    roleType: "mentor",
-  });
-
-  const createdMentor = await Mentor.findById(mentor._id).select(
-    "-password -refreshToken"
-  );
-
-  if (!createdMentor) {
-    throw new ApiError(
-      500,
-      "Something went wrong while registering the mentor"
-    );
-  }
-
-  res
-    .status(200)
-    .json(
-      new ApiResponse(200, createdMentor, "Mentor registered successfully")
-    );
-});
-
 const loginMentor = asyncHandler(async (req, res) => {
   const { username, email, password } = req.body;
   if (!username && !email) {
@@ -306,7 +247,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 
 export {
   getAllMentors,
-  registerMentor,
+  // registerMentor,
   loginMentor,
   logoutMentor,
   evaluateStudent,

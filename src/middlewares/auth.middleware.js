@@ -3,6 +3,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import jwt, { decode } from "jsonwebtoken";
 import { Student } from "../models/student.model.js";
 import { Mentor } from "../models/mentor.model.js";
+import { Admin } from "../models/admin.model.js";
 
 export const verifyJWT = asyncHandler(async (req, _, next) => {
   const token =
@@ -20,6 +21,8 @@ export const verifyJWT = asyncHandler(async (req, _, next) => {
     userModel = Student;
   } else if (decodedToken.roleType === "mentor") {
     userModel = Mentor;
+  } else if (decodedToken.roleType === "admin") {
+    userModel = Admin;
   } else {
     throw new ApiError(400, "Invalid User Type in Token!");
   }
