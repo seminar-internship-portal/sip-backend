@@ -4,8 +4,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { Student } from "../models/student.model.js";
 import { StudentEvaluation } from "../models/studentEvaluation.model.js";
-import { SeminarEvaluationCriteria } from "../models/seminarEvaluationCriteria.model.js";
-import { InternshipEvaluationCriteria } from "../models/internshipEvaluationCriteria.model.js";
+import { EvaluationCriteria } from "../models/evaluationCriteria.model.js";
 
 const generateAccessAndRefreshTokens = async (mentorId) => {
   try {
@@ -118,61 +117,54 @@ const logoutMentor = asyncHandler(async (req, res) => {
 const evaluateStudent = (evalType) => {
   return asyncHandler(async (req, res) => {
     const studId = req.params.studId;
-    const marks = req.body;
+    const marksArr = req.body;
 
-    let evalCriteria;
-    if (evalType === "seminar") {
-      for (const mark of marks) {
-        const criteriaId = mark.evaluationCriteria;
-        evalCriteria = await SeminarEvaluationCriteria.findById(criteriaId);
-
-        if (!evalCriteria) {
-          throw new ApiError(404, "Evaluation criteria not found.");
-        }
-
-        if (mark.marks > evalCriteria.criteriaMarks) {
-          throw new ApiError(
-            400,
-            `${evalCriteria.name} has maximum total marks of ${evalCriteria.criteriaMarks}`
-          );
-        }
-      }
-    } else if (evalType === "internship") {
-      for (const mark of marks) {
-        const criteriaId = mark.evaluationCriteria;
-        evalCriteria = await InternshipEvaluationCriteria.findById(criteriaId);
-
-        if (!evalCriteria) {
-          throw new ApiError(404, "Evaluation criteria not found.");
-        }
-
-        if (mark.marks > evalCriteria.criteriaMarks) {
-          throw new ApiError(
-            400,
-            `${evalCriteria.name} has maximum total marks of ${evalCriteria.criteriaMarks}`
-          );
-        }
-      }
+    const stud = await Student.findById(studId);
+    if (!stud) {
+      throw new ApiError(404, "Student not found");
     }
 
-    const student = await Student.findById(studId);
+    const academicYear = stud.academicYear;
 
-    if (!student) {
-      throw new ApiError(404, "Student not found.");
+    for (const criteria of marksArr) {
+      const evalCriteria = await EvaluationCriteria.findOne({
+        _id: criteria.evaluationCriteria,
+        academicYear,
+        evalType,
+      });
+
+      if (!evalCriteria)
+        throw new ApiError(
+          404,
+          "Some criteria doesn't exist. Ensure criteria are correct."
+        );
+
+      if (criteria.marks > evalCriteria.criteriaMarks) {
+        throw new ApiError(
+          400,
+          `${evalCriteria.name} can have maximum marks of ${evalCriteria.criteriaMarks}`
+        );
+      }
+
+      const studEval = await StudentEvaluation.findOneAndUpdate(
+        {
+          studentId: studId,
+          evaluationCriteria: criteria.evaluationCriteria,
+          evalType,
+        },
+        {
+          marks: criteria.marks,
+        },
+        {
+          upsert: true,
+          new: true,
+        }
+      );
     }
-
-    const evaluatedStud = await StudentEvaluation.findOneAndUpdate(
-      { studentId: studId, evalType },
-      {
-        studentId: studId,
-        marksAssigned: marks,
-      },
-      { upsert: true, new: true }
-    );
 
     res
       .status(200)
-      .json(new ApiResponse(200, evaluatedStud, "Marks Assigned Successfully"));
+      .json(new ApiResponse(200, {}, "Student marks updated successfully"));
   });
 };
 

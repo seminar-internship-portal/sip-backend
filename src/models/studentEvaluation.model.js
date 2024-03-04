@@ -6,18 +6,14 @@ const studentEvaluation = new Schema({
     ref: "Student",
   },
   evalType: String,
-  marksAssigned: [
-    {
-      evaluationCriteria: {
-        type: Schema.Types.ObjectId,
-        ref: "EvaluationCriteria",
-      },
-      marks: {
-        type: Number,
-        default: 0,
-      },
-    },
-  ],
+  evaluationCriteria: {
+    type: Schema.Types.ObjectId,
+    ref: "EvalutionCriteria",
+  },
+  marks: {
+    type: Number,
+    default: 0,
+  },
 });
 
 export const StudentEvaluation = mongoose.model(

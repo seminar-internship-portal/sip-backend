@@ -1,6 +1,4 @@
 import { EvaluationCriteria } from "../models/evaluationCriteria.model.js";
-import { InternshipEvaluationCriteria } from "../models/internshipEvaluationCriteria.model.js";
-import { SeminarEvaluationCriteria } from "../models/seminarEvaluationCriteria.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -362,13 +360,11 @@ const removeMentor = asyncHandler(async (req, res) => {
 
 const getCriterias = (evalType) => {
   return asyncHandler(async (req, res) => {
-    let criterias;
+    const academicYear = req.query.academicYear
+      ? req.query.academicYear
+      : "2023-2024";
 
-    if (evalType === "seminar") {
-      criterias = await SeminarEvaluationCriteria.find({});
-    } else if (evalType === "internship") {
-      criterias = await InternshipEvaluationCriteria.find({});
-    }
+    const criterias = await EvaluationCriteria.find({ evalType, academicYear });
 
     let totalMarks = 0;
     criterias.forEach((criteria) => {
@@ -382,42 +378,27 @@ const getCriterias = (evalType) => {
 const createCriteria = (evalType) => {
   return asyncHandler(async (req, res) => {
     const { criteriaName, criteriaMarks } = req.body;
+    const academicYear = req.body.academicYear
+      ? req.body.academicYear
+      : "2023-2024";
 
     if (!criteriaMarks || !criteriaMarks) {
       throw new ApiError(400, "Name or Marks not provided properly.");
     }
 
-    let newCriteria;
+    const criteria = {
+      name: criteriaName,
+      criteriaMarks,
+      evalType,
+      academicYear,
+    };
 
-    if (evalType === "seminar") {
-      const existingCriteria = await SeminarEvaluationCriteria.find({
-        name: criteriaName,
-      });
+    const existingCriteria = await EvaluationCriteria.find(criteria);
 
-      if (existingCriteria.length) {
-        console.log(existingCriteria);
-        throw new ApiError(409, "Criteria already exists");
-      }
+    if (existingCriteria.length)
+      throw new ApiError(403, `${criteriaName} already exists!`);
 
-      newCriteria = await SeminarEvaluationCriteria.create({
-        name: criteriaName,
-        criteriaMarks,
-      });
-    } else if (evalType === "internship") {
-      const existingCriteria = await InternshipEvaluationCriteria.find({
-        name: criteriaName,
-      });
-
-      if (existingCriteria.length) {
-        console.log(existingCriteria);
-        throw new ApiError(409, "Criteria already exists");
-      }
-
-      newCriteria = await InternshipEvaluationCriteria.create({
-        name: criteriaName,
-        criteriaMarks,
-      });
-    }
+    const newCriteria = await EvaluationCriteria.create(criteria);
 
     res
       .status(200)
@@ -431,21 +412,24 @@ const createCriteria = (evalType) => {
   });
 };
 
-// yet to be implemented
-const deleteCriteria = asyncHandler(async (req, res) => {
-  const criteriaId = req.params.id;
-  const criteria = await EvaluationCriteria.findById(criteriaId);
+const deleteCriteria = (evalType) =>
+  asyncHandler(async (req, res) => {
+    const criteriaId = req.params.id;
+    const criteria = await EvaluationCriteria.find({
+      _id: criteriaId,
+      evalType,
+    });
 
-  if (!criteria) {
-    throw new ApiError(404, "Criteria doesn't exists.");
-  }
+    if (!criteria) {
+      throw new ApiError(404, "Criteria doesn't exists.");
+    }
 
-  await EvaluationCriteria.findOneAndDelete(criteria);
+    await EvaluationCriteria.findByIdAndDelete(criteriaId);
 
-  res
-    .status(200)
-    .json(new ApiResponse(200, {}, "Criteria deleted successfully"));
-});
+    res
+      .status(200)
+      .json(new ApiResponse(200, {}, "Criteria deleted successfully"));
+  });
 
 const getCriteriaInfo = asyncHandler(async (criteriaId) => {
   const res = await EvaluationCriteria.findById(criteriaId);

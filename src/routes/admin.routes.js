@@ -43,6 +43,11 @@ router
   .post(createCriteria("internship"));
 router.route("/evaluation/internshipCriteria").get(getCriterias("internship"));
 
-router.route("/evaluation/:id").delete(deleteCriteria);
+router
+  .route("/evaluation/seminarCriteria/:id")
+  .delete(deleteCriteria("seminar"));
+router
+  .route("/evaluation/internshipCriteria/:id")
+  .delete(deleteCriteria("internship"));
 
 export default router;

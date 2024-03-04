@@ -3,8 +3,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { Student } from "../models/student.model.js";
 import { StudentEvaluation } from "../models/studentEvaluation.model.js";
-import { SeminarEvaluationCriteria } from "../models/seminarEvaluationCriteria.model.js";
-import { InternshipEvaluationCriteria } from "../models/internshipEvaluationCriteria.model.js";
+import { EvaluationCriteria } from "../models/evaluationCriteria.model.js";
 
 const generateAccessAndRefreshTokens = async (studentId) => {
   try {
@@ -149,82 +148,59 @@ const getStudentMarks = (evalType) => {
       throw new ApiError(404, "Student not found.");
     }
 
-    let stud = await StudentEvaluation.findOne({
-      studentId: studId,
+    const academicYear = student.academicYear;
+    const allCriteria = await EvaluationCriteria.find({
       evalType,
+      academicYear,
     });
 
-    // if student evaluation not done yet then assign 0 marks
-    if (!stud) {
-      if (evalType === "seminar") {
-        const evalCriterias = await SeminarEvaluationCriteria.find({});
-        const marksAssigned = evalCriterias.map((criteria) => {
-          return { evaluationCriteria: criteria._id, marks: 0 };
-        });
+    for (const criteria of allCriteria) {
+      const studCriteriaEval = await StudentEvaluation.findOne({
+        studentId: studId,
+        evaluationCriteria: criteria._id,
+        evalType,
+      });
 
-        await StudentEvaluation.findOneAndUpdate(
-          { studentId: studId, evalType },
-          {
-            studentId: studId,
-            marksAssigned,
-          },
-          { upsert: true, new: true }
-        );
-      } else if (evalType === "internship") {
-        const evalCriterias = await InternshipEvaluationCriteria.find({});
-        const marksAssigned = evalCriterias.map((criteria) => {
-          return { evaluationCriteria: criteria._id, marks: 0 };
+      if (!studCriteriaEval)
+        await StudentEvaluation.create({
+          studentId: studId,
+          evaluationCriteria: criteria._id,
+          evalType,
         });
-
-        await StudentEvaluation.findOneAndUpdate(
-          { studentId: studId, evalType },
-          {
-            studentId: studId,
-            marksAssigned,
-          },
-          { upsert: true, new: true }
-        );
-      }
     }
 
-    stud = await StudentEvaluation.findOne({
+    const studAllMarks = await StudentEvaluation.find({
       studentId: studId,
       evalType,
     });
 
-    const studMarks = stud.marksAssigned;
-    const studMarksWithCriteriaInfo = await getCriteriaInfo(
-      evalType,
-      studMarks
-    );
-
-    res.status(200).json(new ApiResponse(200, studMarksWithCriteriaInfo));
+    const studAllMarksWithCriteria = await getCriteriaInfo(studAllMarks);
+    res.status(200).json(new ApiResponse(200, studAllMarksWithCriteria));
   });
 };
 
-async function getCriteriaInfo(evalType, criteriasMarks) {
-  const criteriaInfoPromises = criteriasMarks.map(async (criteria) => {
-    const id = criteria.evaluationCriteria;
-    let criteriaDetails;
+const getCriteriaInfo = async (studAllMarks) => {
+  let studMarksWithCriteria = [];
 
-    if (evalType === "seminar") {
-      criteriaDetails = await SeminarEvaluationCriteria.findById(id);
-    } else {
-      criteriaDetails = await InternshipEvaluationCriteria.findById(id);
-    }
+  for (const studCriteriaMark of studAllMarks) {
+    const { evaluationCriteria, evalType, marks } = studCriteriaMark;
 
-    return {
-      criteriaId: id,
-      criteriaName: criteriaDetails.name,
-      studCriteriaMarks: criteria.marks,
-      criteriaTotalMarks: criteriaDetails.criteriaMarks,
-    };
-  });
+    const criteria = await EvaluationCriteria.findOne({
+      _id: evaluationCriteria,
+      evalType,
+    });
 
-  const criteriaInfo = await Promise.all(criteriaInfoPromises);
-  return criteriaInfo;
-}
-// ---------------------------------------------------------------------------------------
+    const criteriaName = criteria.name;
+    studMarksWithCriteria.push({
+      criteriaId: evaluationCriteria,
+      criteriaName,
+      criteriaTotalMarks: criteria.criteriaMarks,
+      studCriteriaMarks: marks,
+    });
+  }
+
+  return studMarksWithCriteria;
+};
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
   const { fullName, email, avatar, mobileNo } = req.body;
