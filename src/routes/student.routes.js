@@ -17,7 +17,6 @@ router.route("/:studId/seminar/marks").get(getStudentMarks("seminar"));
 router.route("/:studId/internship/marks").get(getStudentMarks("internship"));
 router.route("/:uniqueId").get(getIndividualStudent);
 
-// router.route("/register").post(registerStudent);
 router.route("/login").post(loginStudent);
 
 //secured routes - > logout and accesstoken wale

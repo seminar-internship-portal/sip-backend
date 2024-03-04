@@ -247,7 +247,6 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 
 export {
   getAllMentors,
-  // registerMentor,
   loginMentor,
   logoutMentor,
   evaluateStudent,

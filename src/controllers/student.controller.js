@@ -283,7 +283,6 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 
 export {
   getAllStudents as getData,
-  registerStudent,
   loginStudent,
   logoutStudent,
   getIndividualStudent,
