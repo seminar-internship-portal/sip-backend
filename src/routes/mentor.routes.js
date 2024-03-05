@@ -7,12 +7,15 @@ import {
   getIndividualMentor,
   changeCurrentPassword,
   updateAccountDetails,
+  studentAssigned,
 } from "../controllers/mentor.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = new Router();
 router.route("/").get(getAllMentors);
-// router.route("/register").post(registerMentor);
+
+router.route("/studentAssigned/:mentorId").get(studentAssigned);
+
 router.route("/login").post(loginMentor);
 router.route("/seminar/evaluate/:studId").post(evaluateStudent("seminar"));
 router

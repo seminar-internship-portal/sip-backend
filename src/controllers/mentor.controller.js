@@ -184,6 +184,31 @@ const getIndividualMentor = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, mentor, "Successfully fetched the data"));
 });
 
+const studentAssigned = asyncHandler(async (req, res) => {
+  const mentId = req.params?.mentorId;
+  // const mentor = await Mentor.findById(mentId).select(
+  //   "-password -refreshToken"
+  // );
+
+  // if (!mentor) {
+  //   throw new ApiError(400, "Mentor not Found");
+  // }
+
+  const students = await Student.find({ mentorAssigned: mentId })
+    .populate("mentorAssigned")
+    .select("-password -refreshToken");
+
+  res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        students,
+        "List of Student Assigned fetched successfully!"
+      )
+    );
+});
+
 const changeCurrentPassword = asyncHandler(async (req, res) => {
   const { oldPassword, newPassword } = req.body;
   const mentor = await Mentor.findById(req.user?.id);
@@ -245,4 +270,5 @@ export {
   getIndividualMentor,
   changeCurrentPassword,
   updateAccountDetails,
+  studentAssigned,
 };
