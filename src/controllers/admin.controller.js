@@ -426,6 +426,12 @@ const deleteCriteria = (evalType) =>
 
     await EvaluationCriteria.findByIdAndDelete(criteriaId);
 
+    // delete student evaluations for that deleted
+    await StudentEvaluation.deleteMany({
+      evaluationCriteria: criteriaId,
+      evalType,
+    });
+
     res
       .status(200)
       .json(new ApiResponse(200, {}, "Criteria deleted successfully"));
