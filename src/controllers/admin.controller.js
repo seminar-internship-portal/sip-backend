@@ -208,7 +208,7 @@ const registerMentor = asyncHandler(async (req, res) => {
   }
 
   const password = "pict123";
-  await sendEmail(email, username, password); //*test
+  // await sendEmail(email, username, password); //*test
 
   const mentor = await Mentor.create({
     username: username.toLowerCase(),
@@ -221,7 +221,7 @@ const registerMentor = asyncHandler(async (req, res) => {
     roleType: "mentor",
   });
 
-  // await sendEmail(email, username, password);  //?final wala
+  await sendEmail(email, username, password); //?final wala
 
   const createdMentor = await Mentor.findById(mentor._id);
   if (!createdMentor) {
