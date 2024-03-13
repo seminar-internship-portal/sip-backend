@@ -7,8 +7,10 @@ import {
   getStudentMarks,
   changeCurrentPassword,
   updateAccountDetails,
+  updateStudentAvatar,
 } from "../controllers/student.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { upload } from "../middlewares/multer.middleware.js";
 
 const router = Router();
 
@@ -21,6 +23,10 @@ router.route("/login").post(loginStudent);
 
 //secured routes - > logout and accesstoken wale
 router.route("/logout").post(verifyJWT, logoutStudent);
+router
+  .route("/changeAvatar")
+  .post(verifyJWT, upload.single("avatar"), updateStudentAvatar);
+
 router.route("/changePassword").post(verifyJWT, changeCurrentPassword);
 router.route("/updateAccountDetails").post(verifyJWT, updateAccountDetails);
 

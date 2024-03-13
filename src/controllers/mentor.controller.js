@@ -5,6 +5,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { Student } from "../models/student.model.js";
 import { StudentEvaluation } from "../models/studentEvaluation.model.js";
 import { EvaluationCriteria } from "../models/evaluationCriteria.model.js";
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 const generateAccessAndRefreshTokens = async (mentorId) => {
   try {
@@ -262,6 +263,39 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, ment, "Account Details changed successfully!"));
 });
 
+const updateMentorAvatar = asyncHandler(async (req, res) => {
+  const avatarLocalPath = req.file?.path;
+
+  if (!avatarLocalPath) {
+    throw new ApiError(400, "Avatar File is missing!");
+  }
+
+  //TODO: delete the old avatar from cloudinary!
+
+  const avatar = await uploadOnCloudinary(avatarLocalPath);
+  if (!avatar.url) {
+    throw new ApiError(400, "Error while uploading on avatar");
+  }
+
+  const mentor = await Mentor.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: {
+        avatar: avatar.url,
+      },
+    },
+    {
+      new: true,
+    }
+  ).select("-password");
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, mentor, "Mentor's Avatar Uploaded Succesfully!")
+    );
+});
+
 export {
   getAllMentors,
   loginMentor,
@@ -271,4 +305,5 @@ export {
   changeCurrentPassword,
   updateAccountDetails,
   studentAssigned,
+  updateMentorAvatar,
 };

@@ -4,7 +4,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { Student } from "../models/student.model.js";
 import { StudentEvaluation } from "../models/studentEvaluation.model.js";
 import { EvaluationCriteria } from "../models/evaluationCriteria.model.js";
-
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
 const generateAccessAndRefreshTokens = async (studentId) => {
   try {
     const student = await Student.findById(studentId);
@@ -257,6 +257,39 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, "Password changed Successfully!"));
 });
 
+const updateStudentAvatar = asyncHandler(async (req, res) => {
+  const avatarLocalPath = req.file?.path;
+
+  if (!avatarLocalPath) {
+    throw new ApiError(400, "Avatar File is missing!");
+  }
+
+  //TODO: delete the old avatar from cloudinary!
+
+  const avatar = await uploadOnCloudinary(avatarLocalPath);
+  if (!avatar.url) {
+    throw new ApiError(400, "Error while uploading on avatar");
+  }
+
+  const student = await Student.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: {
+        avatar: avatar.url,
+      },
+    },
+    {
+      new: true,
+    }
+  ).select("-password");
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, student, "Student's Avatar Uploaded Succesfully!")
+    );
+});
+
 export {
   getAllStudents as getData,
   loginStudent,
@@ -265,4 +298,5 @@ export {
   getStudentMarks,
   changeCurrentPassword,
   updateAccountDetails,
+  updateStudentAvatar,
 };
