@@ -10,6 +10,8 @@ import {
   logoutAdmin,
   assignMentor,
   removeMentor,
+  deleteMentor,
+  deleteStudent,
 } from "../controllers/admin.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { verifyRole } from "../middlewares/role.middlware.js";
@@ -29,6 +31,8 @@ router.route("/evaluation/internshipCriteria").get(getCriterias("internship"));
 router.use(verifyRole("admin"));
 router.route("/registerMentor").post(registerMentor);
 router.route("/registerStudent").post(registerStudent);
+router.route("/deleteStudent/:studId").delete(deleteStudent);
+router.route("/deleteMentor/:mentorId").delete(deleteMentor);
 
 router.route("/assignMentor").post(assignMentor);
 router.route("/removeMentor").post(removeMentor);
