@@ -207,7 +207,7 @@ const registerMentor = asyncHandler(async (req, res) => {
     throw new ApiError(409, "Mentor with email or username already exists");
   }
 
-  const password = "pict123";
+  const password = process.env.TEMP_PASSWORD;
   // await sendEmail(email, username, password); //*test
 
   const mentor = await Mentor.create({

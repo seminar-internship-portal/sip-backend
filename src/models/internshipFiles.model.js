@@ -16,10 +16,7 @@ const internshipSchema = new Schema(
     },
     status: {
       type: String,
-    },
-    marks: {
-      type: Number,
-    },
+    }
   },
   {
     timestamps: true,

@@ -19,29 +19,24 @@ const router = Router();
 router.route("/login").post(loginAdmin);
 router.route("/register").post(registerAdmin);
 //secured
-router.route("/logout").post(verifyJWT, logoutAdmin);
+router.use(verifyJWT);
+router.route("/logout").post(logoutAdmin);
 
-router
-  .route("/registerMentor")
-  .post(verifyRole("admin"), verifyJWT, registerMentor);
-router
-  .route("/registerStudent")
-  .post(verifyRole("admin"), verifyJWT, registerStudent);
+router.route("/evaluation/seminarCriteria").get(getCriterias("seminar"));
+router.route("/evaluation/internshipCriteria").get(getCriterias("internship"));
 
-router
-  .route("/assignMentor")
-  .post(verifyRole("admin"), verifyJWT, assignMentor);
+// admin only routes
+router.use(verifyRole("admin"));
+router.route("/registerMentor").post(registerMentor);
+router.route("/registerStudent").post(registerStudent);
 
-router
-  .route("/removeMentor")
-  .post(verifyRole("admin"), verifyJWT, removeMentor);
+router.route("/assignMentor").post(assignMentor);
+router.route("/removeMentor").post(removeMentor);
 
 router.route("/evaluation/seminarCriteria").post(createCriteria("seminar"));
-router.route("/evaluation/seminarCriteria").get(getCriterias("seminar"));
 router
   .route("/evaluation/internshipCriteria")
   .post(createCriteria("internship"));
-router.route("/evaluation/internshipCriteria").get(getCriterias("internship"));
 
 router
   .route("/evaluation/seminarCriteria/:id")
