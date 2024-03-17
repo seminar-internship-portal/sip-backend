@@ -5,6 +5,8 @@ import { Student } from "../models/student.model.js";
 import { StudentEvaluation } from "../models/studentEvaluation.model.js";
 import { EvaluationCriteria } from "../models/evaluationCriteria.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { SeminarInfo } from "../models/seminarFiles.model.js";
+import { InternshipInfo } from "../models/internshipFiles.model.js";
 const generateAccessAndRefreshTokens = async (studentId) => {
   try {
     const student = await Student.findById(studentId);
@@ -290,6 +292,60 @@ const updateStudentAvatar = asyncHandler(async (req, res) => {
     );
 });
 
+const addSeminarDetails = asyncHandler(async (req, res) => {
+  const { title, id } = req.body;
+  if (!title.trim() === "") {
+    throw new ApiError(400, "Title is Required!");
+  }
+
+  const doc = await SeminarInfo.create({
+    title,
+    owner: id,
+  });
+
+  const createdDoc = await SeminarInfo.findById(doc._id);
+  if (!createdDoc) {
+    throw new ApiError(
+      500,
+      "Something went wrong while adding seminar details!"
+    );
+  }
+
+  res
+    .status(200)
+    .json(
+      new ApiResponse(200, createdDoc, "Seminar details added succesfully!")
+    );
+});
+
+const addInternshipDetails = asyncHandler(async (req, res) => {
+  const { companyName, duration, status, id } = req.body;
+  if (!companyName.trim() || !duration.trim() || !status || !id) {
+    throw new ApiError(400, "All fields are necessary!");
+  }
+
+  const doc = await InternshipInfo.create({
+    companyName,
+    duration,
+    status,
+    owner: id,
+  });
+
+  const createdDoc = await InternshipInfo.findById(doc._id);
+  if (!createdDoc) {
+    throw new ApiError(
+      500,
+      "Something went wrong while adding internhsip details!"
+    );
+  }
+
+  res
+    .status(200)
+    .json(
+      new ApiResponse(200, createdDoc, "Internship details added succesfully!")
+    );
+});
+
 export {
   getAllStudents as getData,
   loginStudent,
@@ -299,4 +355,6 @@ export {
   changeCurrentPassword,
   updateAccountDetails,
   updateStudentAvatar,
+  addSeminarDetails,
+  addInternshipDetails,
 };

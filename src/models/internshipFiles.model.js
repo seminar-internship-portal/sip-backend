@@ -5,20 +5,24 @@ const internshipSchema = new Schema(
     companyName: {
       type: String,
     },
-    noc: {
+    offerLetter: {
       type: String,
     },
-    offerLetter: {
+    permissionLetter: {
       type: String,
     },
     completionLetter: {
       type: String,
     },
+    duration: {
+      type: String,
+    },
     status: {
       type: String,
     },
-    marks: {
-      type: Number,
+    owner: {
+      type: Schema.Types.ObjectId,
+      ref: "Student",
     },
   },
   {

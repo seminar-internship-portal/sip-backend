@@ -8,7 +8,17 @@ import {
   changeCurrentPassword,
   updateAccountDetails,
   updateStudentAvatar,
+  addSeminarDetails,
+  addInternshipDetails,
 } from "../controllers/student.controller.js";
+import {
+  uploadReport,
+  uploadAbstract,
+  uploadPPT,
+  uploadPermissionLetter,
+  uploadCompletionLetter,
+  uploadOfferLetter,
+} from "../controllers/docs.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js";
 
@@ -23,11 +33,34 @@ router.route("/login").post(loginStudent);
 
 //secured routes - > logout and accesstoken wale
 router.route("/logout").post(verifyJWT, logoutStudent);
+
+router.route("/changePassword").post(verifyJWT, changeCurrentPassword);
+router.route("/updateAccountDetails").post(verifyJWT, updateAccountDetails);
+//docs
+router.route("/addSeminarDetails").post(verifyJWT, addSeminarDetails);
+router.route("/addInternshipDetails").post(verifyJWT, addInternshipDetails);
 router
   .route("/changeAvatar")
   .post(verifyJWT, upload.single("avatar"), updateStudentAvatar);
 
-router.route("/changePassword").post(verifyJWT, changeCurrentPassword);
-router.route("/updateAccountDetails").post(verifyJWT, updateAccountDetails);
+router
+  .route("/uploadReport")
+  .post(verifyJWT, upload.single("report"), uploadReport);
+
+router
+  .route("/uploadAbstract")
+  .post(verifyJWT, upload.single("abstract"), uploadAbstract);
+
+router.route("/uploadppt").post(verifyJWT, upload.single("ppt"), uploadPPT);
+//internship
+router
+  .route("/uploadOfferLetter")
+  .post(verifyJWT, upload.single("offerLetter"), uploadOfferLetter);
+router
+  .route("/uploadCompletionLetter")
+  .post(verifyJWT, upload.single("completionLetter"), uploadCompletionLetter);
+router
+  .route("/uploadPermissionLetter")
+  .post(verifyJWT, upload.single("permissionLetter"), uploadPermissionLetter);
 
 export default router;

@@ -2,7 +2,7 @@ import mongoose, { Schema } from "mongoose";
 
 const seminarSchema = new Schema(
   {
-    topicName: {
+    title: {
       type: String,
     },
     ppt: {
@@ -14,14 +14,15 @@ const seminarSchema = new Schema(
     report: {
       type: String,
     },
-    literatureSurvey: {
-      type: String,
-    },
     researchPapers: [
       {
         type: String,
       },
     ],
+    owner: {
+      type: Schema.Types.ObjectId,
+      ref: "Student",
+    },
   },
   {
     timestamps: true,
