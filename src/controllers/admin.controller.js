@@ -25,7 +25,7 @@ const sendEmail = async (toEmail, username, password) => {
       from: "Internship Co-ordinator PICT, Pune",
       to: toEmail,
       subject: "Your Account Credentials for Internship & Seminar Portal",
-      text: `Your username: ${username}\nYour temporary password: ${password}`,
+      text: `Your username: ${username}\nYour temporary password: ${password}\nPlease login to ur account and reset the password..\n\nInternship Co-ordinator PICT, Pune`,
     };
     await transporter
       .sendMail(mailOptions)
@@ -183,7 +183,7 @@ const logoutAdmin = asyncHandler(async (req, res) => {
     .clearCookie("accessToken", options)
     .clearCookie("refreshToken", options)
     .clearCookie("role_type")
-    .json(200, new ApiResponse(200, {}, "Admin Logged out Successfully!"));
+    .json(new ApiResponse(200, {}, "Admin Logged out Successfully!"));
 });
 
 const registerMentor = asyncHandler(async (req, res) => {
@@ -207,7 +207,7 @@ const registerMentor = asyncHandler(async (req, res) => {
     throw new ApiError(409, "Mentor with email or username already exists");
   }
 
-  const password = "pict123";
+  const password = process.env.TEMP_PASSWORD;
   // await sendEmail(email, username, password); //*test
 
   const mentor = await Mentor.create({
@@ -236,6 +236,15 @@ const registerMentor = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, "Mentor registered successfully"));
 });
 
+const deleteMentor = asyncHandler(async (req, res) => {
+  const mentorId = req.params.mentorId;
+  await Mentor.deleteOne({
+    _id: mentorId,
+  });
+
+  res.status(200).json(new ApiResponse(200, {}, "Mentor deleted successfully"));
+});
+
 const registerStudent = asyncHandler(async (req, res) => {
   const {
     username,
@@ -249,7 +258,7 @@ const registerStudent = asyncHandler(async (req, res) => {
     registrationId,
   } = req.body;
 
-  const password = "pict123";
+  const password = process.env.TEMP_PASSWORD;
   //valdiations
   if (
     [
@@ -300,9 +309,22 @@ const registerStudent = asyncHandler(async (req, res) => {
     );
   }
 
+  sendEmail(email, username, password);
+
   res
     .status(200)
     .json(new ApiResponse(200, createdStud, "Student registered Successfully"));
+});
+
+const deleteStudent = asyncHandler(async (req, res) => {
+  const studId = req.params.studId;
+  await Student.deleteOne({
+    _id: studId,
+  });
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Student deleted successfully"));
 });
 
 const assignMentor = asyncHandler(async (req, res) => {
@@ -437,17 +459,13 @@ const deleteCriteria = (evalType) =>
       .json(new ApiResponse(200, {}, "Criteria deleted successfully"));
   });
 
-const getCriteriaInfo = asyncHandler(async (criteriaId) => {
-  const res = await EvaluationCriteria.findById(criteriaId);
-
-  return res;
-});
-
 export {
   registerAdmin,
   loginAdmin,
   registerMentor,
+  deleteMentor,
   registerStudent,
+  deleteStudent,
   deleteCriteria,
   getCriterias,
   createCriteria,

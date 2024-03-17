@@ -84,6 +84,14 @@ studentSchema.pre("save", async function (next) {
   next();
 });
 
+studentSchema.pre("deleteOne", async function (next) {
+  const studentId = this._conditions._id;
+  await mongoose.model("StudentEvaluation").deleteMany({
+    studentId,
+  });
+  next();
+});
+
 studentSchema.methods.isPasswordCorrect = async function (password) {
   return await bcrypt.compare(password, this.password);
 };

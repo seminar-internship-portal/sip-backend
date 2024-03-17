@@ -138,7 +138,7 @@ const logoutStudent = asyncHandler(async (req, res) => {
     .clearCookie("refreshToken", options)
     .clearCookie("role_type")
 
-    .json(200, new ApiResponse(200, {}, "Student Logged out Successfully!"));
+    .json(new ApiResponse(200, {}, "Student Logged out Successfully!"));
 });
 
 const getStudentMarks = (evalType) => {

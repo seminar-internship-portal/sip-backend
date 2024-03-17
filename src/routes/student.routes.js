@@ -24,6 +24,12 @@ import { upload } from "../middlewares/multer.middleware.js";
 
 const router = Router();
 
+router.route("/login").post(loginStudent);
+
+//secured routes - > logout and accesstoken wale
+router.use(verifyJWT);
+router.route("/logout").post(logoutStudent);
+
 router.route("/").get(getData);
 router.route("/:studId/seminar/marks").get(getStudentMarks("seminar"));
 router.route("/:studId/internship/marks").get(getStudentMarks("internship"));
@@ -41,7 +47,7 @@ router.route("/addSeminarDetails").post(verifyJWT, addSeminarDetails);
 router.route("/addInternshipDetails").post(verifyJWT, addInternshipDetails);
 router
   .route("/changeAvatar")
-  .post(verifyJWT, upload.single("avatar"), updateStudentAvatar);
+  .post(upload.single("avatar"), updateStudentAvatar);
 
 router
   .route("/uploadReport")

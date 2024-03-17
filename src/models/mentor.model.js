@@ -67,6 +67,16 @@ mentorSchema.pre("save", async function (next) {
   next();
 });
 
+mentorSchema.pre("deleteOne", async function (next) {
+  const stud = mongoose.model("Student");
+  const mentorId = this._conditions._id;
+  await stud.updateMany(
+    { mentorAssigned: mentorId },
+    { $unset: { mentorAssigned: "" } }
+  );
+  next();
+});
+
 mentorSchema.methods.isPasswordCorrect = async function (password) {
   return await bcrypt.compare(password, this.password);
 };
