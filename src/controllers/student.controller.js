@@ -7,6 +7,7 @@ import { EvaluationCriteria } from "../models/evaluationCriteria.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { SeminarInfo } from "../models/seminarFiles.model.js";
 import { InternshipInfo } from "../models/internshipFiles.model.js";
+
 const generateAccessAndRefreshTokens = async (studentId) => {
   try {
     const student = await Student.findById(studentId);
@@ -28,29 +29,109 @@ const generateAccessAndRefreshTokens = async (studentId) => {
 const getAllStudents = asyncHandler(async (req, res) => {
   const year = req.query.year;
 
-  let students;
-  if (!year) {
-    students = await Student.find({});
-  } else {
-    students = await Student.find({
-      academicYear: year,
-    });
-  }
+  const studentsQuery = Student.find({});
+  if (year) studentsQuery.where({ academicYear: year });
+  const students = await studentsQuery.exec();
 
-  const studentData = students.map((stud) => {
+  const studentData = students.map(async (stud) => {
+    const { _id, password, createdAt, updatedAt, refreshToken, ...rest } =
+      stud.toObject();
+
+    const seminarTopic = await SeminarInfo.findOne({
+      owner: _id,
+    }).select("title -_id");
+
+    const internships = await InternshipInfo.find({
+      owner: _id,
+    }).select("companyName status");
+
     return {
-      id: stud._id,
-      username: stud.username,
-      email: stud.email,
-      fullName: stud.fullName,
-      mobileNo: stud.mobileNo,
-      rollNo: stud.rollNo,
-      prnNo: stud.prnNo,
-      registrationId: stud.registrationId,
+      id: _id,
+      ...rest,
+      seminarTopic: seminarTopic ? seminarTopic.title : null,
+      internships,
     };
   });
-  res.status(200).json(new ApiResponse(200, studentData));
+
+  res.status(200).json(new ApiResponse(200, await Promise.all(studentData)));
 });
+
+const getAllInfo = (evalType) => {
+  return asyncHandler(async (req, res) => {
+    const academicYear = req.query?.academicYear;
+
+    const model = evalType == "seminar" ? SeminarInfo : InternshipInfo;
+
+    let allDetails = await model.find({}).populate({
+      path: "owner",
+      select: "fullName rollNo registraionId academicYear",
+    });
+
+    allDetails = allDetails
+      .filter((ele) => {
+        if (!academicYear && ele.owner !== null) return true;
+        return ele.owner !== null && ele.owner.academicYear === academicYear;
+      })
+      .map((ele) => {
+        const { createdAt, updatedAt, owner, ...rest } = ele.toObject();
+        return {
+          fullName: owner.fullName,
+          rollNo: owner.rollNo,
+          registration: owner.registrationId,
+          ...rest,
+        };
+      });
+
+    res.status(200).json(new ApiResponse(200, allDetails));
+  });
+};
+
+const getStudentDetails = (evalType) =>
+  asyncHandler(async (req, res) => {
+    const model = evalType == "seminar" ? SeminarInfo : InternshipInfo;
+    const studDetails = await model.find({
+      owner: req.params.studId,
+    });
+    res.status(200).json(new ApiResponse(200, studDetails));
+  });
+
+const updateStudentDetails = (evalType) => {
+  return asyncHandler(async (req, res) => {
+    const studId = req.params?.studId;
+    const data = req.body;
+    const stud = await Student.findById(studId);
+    if (!stud) throw new ApiError(404, "Student not found");
+    let resData;
+
+    if (evalType == "seminar") {
+      resData = await SeminarInfo.findOneAndUpdate(
+        {
+          owner: studId,
+        },
+        { $set: { ...data } },
+        {
+          returnOriginal: false,
+        }
+      );
+    } else {
+      const internshipId = req.params?.internshipId;
+      resData = await InternshipInfo.findOneAndUpdate(
+        {
+          owner: studId,
+          _id: internshipId,
+        },
+        { $set: { ...data } },
+        { returnOriginal: false }
+      );
+    }
+
+    res
+      .status(200)
+      .json(
+        new ApiResponse(200, resData, `${evalType} data updated successfully`)
+      );
+  });
+};
 
 const getIndividualStudent = asyncHandler(async (req, res) => {
   const idToFind = req.params?.uniqueId;
@@ -298,6 +379,15 @@ const addSeminarDetails = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Title is Required!");
   }
 
+  const existingDoc = await SeminarInfo.find({
+    owner: id,
+  });
+  if (existingDoc)
+    throw new ApiError(
+      400,
+      "Seminar Info already added.. pls update existing info"
+    );
+
   const doc = await SeminarInfo.create({
     title,
     owner: id,
@@ -320,7 +410,7 @@ const addSeminarDetails = asyncHandler(async (req, res) => {
 
 const addInternshipDetails = asyncHandler(async (req, res) => {
   const { companyName, duration, status, id } = req.body;
-  if (!companyName.trim() || !duration.trim() || !status || !id) {
+  if (!companyName?.trim() || !duration?.trim() || !status || !id) {
     throw new ApiError(400, "All fields are necessary!");
   }
 
@@ -335,7 +425,7 @@ const addInternshipDetails = asyncHandler(async (req, res) => {
   if (!createdDoc) {
     throw new ApiError(
       500,
-      "Something went wrong while adding internhsip details!"
+      "Something went wrong while adding internship details!"
     );
   }
 
@@ -348,9 +438,12 @@ const addInternshipDetails = asyncHandler(async (req, res) => {
 
 export {
   getAllStudents as getData,
+  getAllInfo,
   loginStudent,
   logoutStudent,
   getIndividualStudent,
+  getStudentDetails,
+  updateStudentDetails,
   getStudentMarks,
   changeCurrentPassword,
   updateAccountDetails,

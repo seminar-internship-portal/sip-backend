@@ -5,6 +5,8 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { Student } from "../models/student.model.js";
 import { StudentEvaluation } from "../models/studentEvaluation.model.js";
 import { EvaluationCriteria } from "../models/evaluationCriteria.model.js";
+import { SeminarInfo } from "../models/seminarFiles.model.js";
+import { InternshipInfo } from "../models/internshipFiles.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 const generateAccessAndRefreshTokens = async (mentorId) => {
@@ -137,7 +139,7 @@ const evaluateStudent = (evalType) => {
       if (!evalCriteria)
         throw new ApiError(
           404,
-          "Some criteria doesn't exist. Ensure criteria are correct."
+          "Some criteria doesn't exist. Ensure criterias are correct."
         );
 
       if (criteria.marks > evalCriteria.criteriaMarks) {
@@ -187,24 +189,46 @@ const getIndividualMentor = asyncHandler(async (req, res) => {
 
 const studentAssigned = asyncHandler(async (req, res) => {
   const mentId = req.params?.mentorId;
-  // const mentor = await Mentor.findById(mentId).select(
-  //   "-password -refreshToken"
-  // );
+  const academicYear = req.query?.academicYear;
+  const mentor = await Mentor.findById(mentId).select(
+    "-password -refreshToken"
+  );
 
-  // if (!mentor) {
-  //   throw new ApiError(400, "Mentor not Found");
-  // }
+  if (!mentor) {
+    throw new ApiError(400, "Mentor not Found");
+  }
 
-  const students = await Student.find({ mentorAssigned: mentId })
-    .populate("mentorAssigned")
-    .select("-password -refreshToken");
+  const students = await Student.find({
+    mentorAssigned: mentId,
+    academicYear,
+  }).select("-password -refreshToken ");
+
+  const studentData = students.map(async (stud) => {
+    const { _id, password, createdAt, updatedAt, refreshToken, ...rest } =
+      stud.toObject();
+
+    const seminarTopic = await SeminarInfo.findOne({
+      owner: _id,
+    }).select("title -_id");
+
+    const internships = await InternshipInfo.find({
+      owner: _id,
+    }).select("companyName status");
+
+    return {
+      id: _id,
+      ...rest,
+      seminarTopic: seminarTopic ? seminarTopic.title : null,
+      internships,
+    };
+  });
 
   res
     .status(200)
     .json(
       new ApiResponse(
         200,
-        students,
+        await Promise.all(studentData),
         "List of Student Assigned fetched successfully!"
       )
     );

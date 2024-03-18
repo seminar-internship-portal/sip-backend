@@ -8,7 +8,7 @@ const studentEvaluation = new Schema({
   evalType: String,
   evaluationCriteria: {
     type: Schema.Types.ObjectId,
-    ref: "EvalutionCriteria",
+    ref: "EvaluationCriteria",
   },
   marks: {
     type: Number,

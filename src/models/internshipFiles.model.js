@@ -5,6 +5,12 @@ const internshipSchema = new Schema(
     companyName: {
       type: String,
     },
+    startDate: Date,
+    endDate: Date,
+    stipend: {
+      type: Number,
+      default: 0,
+    },
     offerLetter: {
       type: String,
     },

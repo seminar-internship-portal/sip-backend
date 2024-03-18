@@ -59,14 +59,6 @@ const studentSchema = new Schema(
     refreshToken: {
       type: String,
     },
-    SeminarInfo: {
-      type: Schema.Types.ObjectId,
-      ref: "SeminarInfo", //! check in future
-    },
-    internshipInfo: {
-      type: Schema.Types.ObjectId,
-      ref: "InternshipInfo",
-    },
     mentorAssigned: {
       type: Schema.Types.ObjectId,
       ref: "Mentor",

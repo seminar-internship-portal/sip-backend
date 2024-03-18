@@ -10,6 +10,9 @@ import {
   updateStudentAvatar,
   addSeminarDetails,
   addInternshipDetails,
+  getStudentDetails,
+  updateStudentDetails,
+  getAllInfo,
 } from "../controllers/student.controller.js";
 import {
   uploadReport,
@@ -31,8 +34,18 @@ router.use(verifyJWT);
 router.route("/logout").post(logoutStudent);
 
 router.route("/").get(getData);
+router.route("/internship").get(getAllInfo("internship"));
+router.route("/seminar").get(getAllInfo("seminar"));
 router.route("/:studId/seminar/marks").get(getStudentMarks("seminar"));
 router.route("/:studId/internship/marks").get(getStudentMarks("internship"));
+router.route("/:studId/internship").get(getStudentDetails("internship"));
+router
+  .route("/:studId/internship/:internshipId")
+  .patch(updateStudentDetails("internship"));
+router
+  .route("/:studId/seminar")
+  .get(getStudentDetails("seminar"))
+  .patch(updateStudentDetails("seminar"));
 router.route("/:uniqueId").get(getIndividualStudent);
 
 router.route("/login").post(loginStudent);
