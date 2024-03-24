@@ -382,7 +382,7 @@ const addSeminarDetails = asyncHandler(async (req, res) => {
   const existingDoc = await SeminarInfo.find({
     owner: id,
   });
-  if (existingDoc)
+  if (existingDoc.length)
     throw new ApiError(
       400,
       "Seminar Info already added.. pls update existing info"
