@@ -198,10 +198,15 @@ const studentAssigned = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Mentor not Found");
   }
 
-  const students = await Student.find({
+  let query = {
     mentorAssigned: mentId,
-    academicYear,
-  }).select("-password -refreshToken ");
+  };
+
+  if (academicYear) {
+    query.academicYear = academicYear;
+  }
+
+  const students = await Student.find(query).select("-password -refreshToken");
 
   const studentData = students.map(async (stud) => {
     const { _id, password, createdAt, updatedAt, refreshToken, ...rest } =

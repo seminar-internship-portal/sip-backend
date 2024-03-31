@@ -62,10 +62,13 @@ const getAllInfo = (evalType) => {
 
     const model = evalType == "seminar" ? SeminarInfo : InternshipInfo;
 
-    let allDetails = await model.find({}).populate({
-      path: "owner",
-      select: "fullName rollNo registraionId academicYear",
-    });
+    let allDetails = await model
+      .find({})
+      .populate({
+        path: "owner",
+        select: "fullName rollNo registraionId academicYear",
+      })
+      .sort({ stipend: -1 });
 
     allDetails = allDetails
       .filter((ele) => {
@@ -78,6 +81,7 @@ const getAllInfo = (evalType) => {
           fullName: owner.fullName,
           rollNo: owner.rollNo,
           registration: owner.registrationId,
+          academicYear: owner.academicYear,
           ...rest,
         };
       });
