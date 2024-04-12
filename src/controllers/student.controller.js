@@ -2,6 +2,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { Student } from "../models/student.model.js";
+import { Mentor } from "../models/mentor.model.js";
 import { StudentEvaluation } from "../models/studentEvaluation.model.js";
 import { EvaluationCriteria } from "../models/evaluationCriteria.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
@@ -178,6 +179,17 @@ const loginStudent = asyncHandler(async (req, res) => {
   const loggedInStudent = await Student.findById(student._id).select(
     "-password -refreshToken"
   );
+  let mentorName = null;
+  if (loggedInStudent.mentorAssigned) {
+    const mentor = await Mentor.findById(loggedInStudent.mentorAssigned).select(
+      "fullName"
+    );
+    mentorName = mentor.fullName;
+  }
+
+  const finalStudent = await Student.findByIdAndUpdate(student._id, {
+    mentorName,
+  });
   const options = {
     httpOnly: true,
   };
@@ -191,7 +203,7 @@ const loginStudent = asyncHandler(async (req, res) => {
       new ApiResponse(
         200,
         {
-          student: loggedInStudent,
+          student: finalStudent,
           accessToken,
           refreshToken,
         },

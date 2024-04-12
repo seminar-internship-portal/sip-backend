@@ -63,6 +63,9 @@ const studentSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "Mentor",
     },
+    mentorName: {
+      type: String,
+    },
   },
   {
     timestamps: true,
