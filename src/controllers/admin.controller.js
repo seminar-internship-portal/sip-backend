@@ -9,6 +9,7 @@ import nodemailer from "nodemailer";
 import { StudentEvaluation } from "../models/studentEvaluation.model.js";
 import { InternshipInfo } from "../models/internshipFiles.model.js";
 import { SeminarInfo } from "../models/seminarFiles.model.js";
+import { TotalMarks } from "../models/totalMarks.model.js";
 
 const transporter = nodemailer.createTransport({
   service: "Gmail",
@@ -382,6 +383,29 @@ const removeMentor = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, "Mentor removed Successfully!"));
 });
 
+const updateTotalMarks = asyncHandler(async (req, res) => {
+  let { academicYear, evalType, marks } = req.body;
+  if (!marks) marks = 100;
+
+  let totalMarks = await TotalMarks.findOneAndUpdate(
+    { academicYear, evalType },
+    { marks },
+    { new: true, upsert: true }
+  );
+
+  // Clear referenced records
+  if (totalMarks) {
+    await EvaluationCriteria.deleteMany({
+      academicYear,
+      evalType,
+    });
+  }
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, totalMarks, "Total marks updated successfully"));
+});
+
 const getCriterias = (evalType) => {
   return asyncHandler(async (req, res) => {
     const academicYear = req.query.academicYear
@@ -395,7 +419,18 @@ const getCriterias = (evalType) => {
       totalMarks += criteria.criteriaMarks;
     });
 
-    res.status(200).json(new ApiResponse(200, { criterias, totalMarks }));
+    let totalMaxMarks = await TotalMarks.findOne({ evalType, academicYear });
+    if (!totalMaxMarks) {
+      totalMaxMarks = await TotalMarks.create({ evalType, academicYear });
+    }
+
+    res.status(200).json(
+      new ApiResponse(200, {
+        criterias,
+        totalMarks,
+        totalMaxMarks: totalMaxMarks.marks,
+      })
+    );
   });
 };
 
@@ -519,6 +554,7 @@ export {
   registerStudent,
   deleteStudent,
   deleteCriteria,
+  updateTotalMarks,
   getCriterias,
   createCriteria,
   logoutAdmin,

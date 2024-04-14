@@ -14,6 +14,7 @@ import {
   deleteStudent,
   setInternshipDeadline,
   setSeminarDeadline,
+  updateTotalMarks,
 } from "../controllers/admin.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { verifyRole } from "../middlewares/role.middlware.js";
@@ -41,6 +42,7 @@ router.route("/setSeminarDeadline").post(setSeminarDeadline);
 router.route("/assignMentor").post(assignMentor);
 router.route("/removeMentor").post(removeMentor);
 
+router.route("/evaluation/totalMarks").post(updateTotalMarks);
 router.route("/evaluation/seminarCriteria").post(createCriteria("seminar"));
 router
   .route("/evaluation/internshipCriteria")

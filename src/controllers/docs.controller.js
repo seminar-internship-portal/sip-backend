@@ -163,6 +163,7 @@ const searchFuzzyMatchInFile = async (filePath, searchTerm, windowSize = 5) => {
 
     // Combine consecutive words into phrases
     for (let i = 0; i < words.length; i++) {
+      fset.add(words[i]);
       const start = Math.max(0, i - windowSize);
       const end = Math.min(words.length, i + windowSize);
       let phrase = words[i];

@@ -91,6 +91,50 @@ const getAllInfo = (evalType) => {
   });
 };
 
+const studentsUnderCompany = asyncHandler(async (req, res) => {
+  const companyName = req.params.companyName;
+  const academicYear = req.query.academicYear;
+
+  if (!companyName) {
+    throw new ApiError(404, "Company name not provided.");
+  }
+
+  let pipeline = [
+    {
+      $match: {
+        companyName: { $regex: new RegExp(companyName, "i") },
+      },
+    },
+    {
+      $lookup: {
+        from: "students",
+        localField: "owner",
+        foreignField: "_id",
+        as: "owner",
+      },
+    },
+    {
+      $unwind: "$owner",
+    },
+    { $replaceRoot: { newRoot: "$owner" } },
+    {
+      $project: {
+        password: 0,
+        refreshToken: 0,
+        createdAt: 0,
+        updatedAt: 0,
+      },
+    },
+  ];
+
+  if (academicYear) {
+    pipeline.push({ $match: { academicYear: academicYear } });
+  }
+
+  const students = await InternshipInfo.aggregate(pipeline);
+  res.status(200).json(new ApiResponse(200, students));
+});
+
 const getStudentDetails = (evalType) =>
   asyncHandler(async (req, res) => {
     const model = evalType == "seminar" ? SeminarInfo : InternshipInfo;
@@ -455,6 +499,7 @@ const addInternshipDetails = asyncHandler(async (req, res) => {
 export {
   getAllStudents as getData,
   getAllInfo,
+  studentsUnderCompany,
   loginStudent,
   logoutStudent,
   getIndividualStudent,
