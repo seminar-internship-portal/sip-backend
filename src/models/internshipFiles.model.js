@@ -20,6 +20,14 @@ const internshipSchema = new Schema(
     completionLetter: {
       type: String,
     },
+    fileMatchResults: {
+      type: {
+        offerLetter: {
+          matchScore: Number,
+          matchPhrase: String,
+        },
+      },
+    },
     duration: {
       type: String,
     },

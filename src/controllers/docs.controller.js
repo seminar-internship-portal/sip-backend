@@ -6,6 +6,11 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { SeminarInfo } from "../models/seminarFiles.model.js";
 import { InternshipInfo } from "../models/internshipFiles.model.js";
+import fs from "fs/promises";
+import path from "path";
+import pdf2img from "pdf-img-convert";
+import { createWorker } from "tesseract.js";
+import FuzzySet from "fuzzyset";
 
 // seminar wale chije!!
 const uploadReport = asyncHandler(async (req, res) => {
@@ -115,6 +120,69 @@ const uploadPPT = asyncHandler(async (req, res) => {
 });
 
 //internship
+const convertPDFToImage = async (pdfFilePath, outputDirectory) => {
+  try {
+    const pdfArray = await pdf2img.convert(pdfFilePath, {
+      height: 3508,
+      width: 2480,
+      page_numbers: [1],
+    });
+
+    await fs.writeFile(`${outputDirectory}/image.png`, pdfArray[0]);
+  } catch (error) {
+    throw error;
+  }
+};
+
+const extractTextFromFile = async (inputFilePath, outputDirPath) => {
+  try {
+    const worker = await createWorker("eng");
+
+    const {
+      data: { text },
+    } = await worker.recognize(inputFilePath);
+
+    await worker.terminate();
+
+    const outputFileName = path.basename(inputFilePath) + ".txt";
+    const outputFile = path.join(outputDirPath, outputFileName);
+
+    await fs.writeFile(outputFile, text);
+  } catch (error) {
+    throw error;
+  }
+};
+
+// insert file txt content and get its similar match
+const searchFuzzyMatchInFile = async (filePath, searchTerm, windowSize = 5) => {
+  try {
+    const content = await fs.readFile(filePath, { encoding: "utf-8" });
+    // Extract words from the content
+    const words = content.match(/[a-zA-Z]+/g);
+    const fset = FuzzySet();
+
+    // Combine consecutive words into phrases
+    for (let i = 0; i < words.length; i++) {
+      const start = Math.max(0, i - windowSize);
+      const end = Math.min(words.length, i + windowSize);
+      let phrase = words[i];
+      for (let j = i + 1; j < end; j++) {
+        phrase += " " + words[j];
+        fset.add(phrase);
+      }
+      for (let j = i - 1; j >= start; j--) {
+        phrase = words[j] + " " + phrase;
+        fset.add(phrase);
+      }
+    }
+
+    const result = fset.get(searchTerm);
+    return result;
+  } catch (error) {
+    throw error;
+  }
+};
+
 const uploadOfferLetter = asyncHandler(async (req, res) => {
   const offerLetterLocalPath = req.file?.path;
   const { id } = req.body;
@@ -122,25 +190,59 @@ const uploadOfferLetter = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Offer-Letter is missing!");
   }
 
+  if (path.extname(offerLetterLocalPath).toLowerCase() != ".pdf")
+    throw new ApiError(400, "Please upload PDF file only");
+
+  const article = await InternshipInfo.findById(id).populate("owner");
+  if (!article) {
+    throw new ApiError(400, "Internship not found");
+  }
+  if (!article.owner) {
+    throw new ApiError(400, "Associated student not found");
+  }
+  const stud = article.owner;
+
+  const tempPath = "./public/temp";
+  const studDir = `${tempPath}/${id}`;
+  await fs.mkdir(studDir, { recursive: true });
+  await convertPDFToImage(offerLetterLocalPath, studDir);
+  await extractTextFromFile(`${studDir}/image.png`, studDir);
+
+  const matchRes = await searchFuzzyMatchInFile(
+    `${studDir}/image.png.txt`,
+    stud.fullName
+  );
+
+  // delete files after work is done
+  await fs.rm(studDir, { recursive: true, force: true });
+
   //TODO: delete the old avatar from cloudinary!
   const ol = await uploadOnCloudinary(offerLetterLocalPath);
 
   if (!ol.url) {
     throw new ApiError(400, "Error while uploading OfferLetter");
   }
-  const article = await InternshipInfo.findById(id);
-  if (!article) {
-    throw new ApiError(400, "Internship not found");
-  }
+
   const internshipArticle = await InternshipInfo.findByIdAndUpdate(
     id,
-    { $set: { offerLetter: ol.url } },
+    {
+      $set: {
+        offerLetter: ol.url,
+        fileMatchResults: {
+          offerLetter: {
+            matchScore: matchRes[0][0],
+            matchPhrase: matchRes[0][1],
+          },
+        },
+      },
+    },
     { new: true }
   );
 
   if (!internshipArticle) {
     throw new ApiError(400, "Error while uploading offerletter!");
   }
+
   return res
     .status(200)
     .json(
