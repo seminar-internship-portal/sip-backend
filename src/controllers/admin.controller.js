@@ -7,6 +7,8 @@ import { Student } from "../models/student.model.js";
 import { Admin } from "../models/admin.model.js";
 import nodemailer from "nodemailer";
 import { StudentEvaluation } from "../models/studentEvaluation.model.js";
+import { InternshipInfo } from "../models/internshipFiles.model.js";
+import { SeminarInfo } from "../models/seminarFiles.model.js";
 
 const transporter = nodemailer.createTransport({
   service: "Gmail",
@@ -459,6 +461,56 @@ const deleteCriteria = (evalType) =>
       .json(new ApiResponse(200, {}, "Criteria deleted successfully"));
   });
 
+const setInternshipDeadline = asyncHandler(async (req, res) => {
+  const { deadlineDate } = req.body;
+
+  if (!deadlineDate || !/^\d{4}-\d{2}-\d{2}$/.test(deadlineDate)) {
+    throw new ApiError(
+      400,
+      "Invalid deadline Date Format. Please provide a date in yyyy-mm-dd format."
+    );
+  }
+
+  const date = new Date(deadlineDate);
+
+  if (isNaN(date.getTime())) {
+    throw new ApiError(
+      400,
+      "Invalid deadline Date. Please provide a valid date."
+    );
+  }
+  await InternshipInfo.updateMany({}, { $set: { deadline: date } });
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Deadline for Internship is added"));
+});
+
+const setSeminarDeadline = asyncHandler(async (req, res) => {
+  const { deadlineDate } = req.body;
+
+  if (!deadlineDate || !/^\d{4}-\d{2}-\d{2}$/.test(deadlineDate)) {
+    throw new ApiError(
+      400,
+      "Invalid deadline Date Format. Please provide a date in yyyy-mm-dd format."
+    );
+  }
+
+  const date = new Date(deadlineDate);
+
+  if (isNaN(date.getTime())) {
+    throw new ApiError(
+      400,
+      "Invalid deadline Date. Please provide a valid date."
+    );
+  }
+  await SeminarInfo.updateMany({}, { $set: { deadline: date } });
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Deadline for Seminar is added"));
+});
+
 export {
   registerAdmin,
   loginAdmin,
@@ -472,4 +524,6 @@ export {
   logoutAdmin,
   assignMentor,
   removeMentor,
+  setInternshipDeadline,
+  setSeminarDeadline,
 };

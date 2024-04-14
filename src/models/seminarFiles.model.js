@@ -14,6 +14,10 @@ const seminarSchema = new Schema(
     report: {
       type: String,
     },
+    deadline: {
+      type: Date,
+      default: null,
+    },
     researchPapers: [
       {
         type: String,

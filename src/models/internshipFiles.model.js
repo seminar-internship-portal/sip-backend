@@ -26,6 +26,10 @@ const internshipSchema = new Schema(
     status: {
       type: String,
     },
+    deadline: {
+      type: Date,
+      default: null,
+    },
     owner: {
       type: Schema.Types.ObjectId,
       ref: "Student",

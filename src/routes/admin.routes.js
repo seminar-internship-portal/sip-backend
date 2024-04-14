@@ -12,6 +12,8 @@ import {
   removeMentor,
   deleteMentor,
   deleteStudent,
+  setInternshipDeadline,
+  setSeminarDeadline,
 } from "../controllers/admin.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { verifyRole } from "../middlewares/role.middlware.js";
@@ -33,6 +35,8 @@ router.route("/registerMentor").post(registerMentor);
 router.route("/registerStudent").post(registerStudent);
 router.route("/deleteStudent/:studId").delete(deleteStudent);
 router.route("/deleteMentor/:mentorId").delete(deleteMentor);
+router.route("/setInternshipDeadline").post(setInternshipDeadline);
+router.route("/setSeminarDeadline").post(setSeminarDeadline);
 
 router.route("/assignMentor").post(assignMentor);
 router.route("/removeMentor").post(removeMentor);
