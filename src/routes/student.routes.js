@@ -22,6 +22,7 @@ import {
   uploadPermissionLetter,
   uploadCompletionLetter,
   uploadOfferLetter,
+  deleteInternship,
 } from "../controllers/docs.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js";
@@ -83,5 +84,8 @@ router
 router
   .route("/uploadPermissionLetter")
   .post(verifyJWT, upload.single("permissionLetter"), uploadPermissionLetter);
+
+//delete routes
+router.route("/deleteInternship/:id").delete(verifyJWT, deleteInternship);
 
 export default router;

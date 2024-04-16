@@ -3,7 +3,10 @@ import { Student } from "../models/student.model.js";
 import { Mentor } from "../models/mentor.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import {
+  uploadOnCloudinary,
+  deleteFromCloudinary,
+} from "../utils/cloudinary.js";
 import { SeminarInfo } from "../models/seminarFiles.model.js";
 import { InternshipInfo } from "../models/internshipFiles.model.js";
 import fs from "fs/promises";
@@ -27,6 +30,7 @@ const uploadReport = asyncHandler(async (req, res) => {
   if (!report.url) {
     throw new ApiError(400, "Error while uploading report");
   }
+  console.log(report);
 
   const seminarArticle = await SeminarInfo.findOneAndUpdate(
     { owner: id },
@@ -217,7 +221,6 @@ const uploadOfferLetter = asyncHandler(async (req, res) => {
   // delete files after work is done
   await fs.rm(studDir, { recursive: true, force: true });
 
-  //TODO: delete the old avatar from cloudinary!
   const ol = await uploadOnCloudinary(offerLetterLocalPath);
 
   if (!ol.url) {
@@ -228,7 +231,10 @@ const uploadOfferLetter = asyncHandler(async (req, res) => {
     id,
     {
       $set: {
-        offerLetter: ol.url,
+        offerLetter: {
+          url: ol.url,
+          publicId: ol.public_id,
+        },
         fileMatchResults: {
           offerLetter: {
             matchScore: matchRes[0][0],
@@ -274,7 +280,14 @@ const uploadCompletionLetter = asyncHandler(async (req, res) => {
   }
   const internshipArticle = await InternshipInfo.findByIdAndUpdate(
     id,
-    { $set: { completionLetter: cl.url } },
+    {
+      $set: {
+        completionLetter: {
+          url: cl.url,
+          publicId: cl.pubic_id,
+        },
+      },
+    },
     { new: true }
   );
 
@@ -311,7 +324,14 @@ const uploadPermissionLetter = asyncHandler(async (req, res) => {
   }
   const internshipArticle = await InternshipInfo.findByIdAndUpdate(
     id,
-    { $set: { permissionLetter: pl.url } },
+    {
+      $set: {
+        permissionLetter: {
+          url: pl.url,
+          publicId: pl.public_id,
+        },
+      },
+    },
     { new: true }
   );
 
@@ -328,6 +348,24 @@ const uploadPermissionLetter = asyncHandler(async (req, res) => {
       )
     );
 });
+
+const deleteInternship = asyncHandler(async (req, res) => {
+  const internshipId = req.params.id;
+  const article = await InternshipInfo.findById(internshipId);
+  const ol_pid = article.offerLetter.publicId;
+  const cl_pid = article.completionLetter.publicId;
+  const pl_pid = article.permissionLetter.publicId;
+
+  const res1 = await deleteFromCloudinary(ol_pid);
+  const res2 = await deleteFromCloudinary(cl_pid);
+  const res3 = await deleteFromCloudinary(pl_pid);
+
+  await InternshipInfo.deleteOne({ _id: internshipId });
+  res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Internship deleted successfully"));
+});
+
 export {
   uploadReport,
   uploadAbstract,
@@ -335,4 +373,5 @@ export {
   uploadOfferLetter,
   uploadCompletionLetter,
   uploadPermissionLetter,
+  deleteInternship,
 };

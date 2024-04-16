@@ -12,13 +12,28 @@ const internshipSchema = new Schema(
       default: 0,
     },
     offerLetter: {
-      type: String,
+      url: {
+        type: String,
+      },
+      publicId: {
+        type: String,
+      },
     },
     permissionLetter: {
-      type: String,
+      url: {
+        type: String,
+      },
+      publicId: {
+        type: String,
+      },
     },
     completionLetter: {
-      type: String,
+      url: {
+        type: String,
+      },
+      publicId: {
+        type: String,
+      },
     },
     fileMatchResults: {
       type: {
