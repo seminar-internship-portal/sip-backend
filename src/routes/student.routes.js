@@ -13,6 +13,7 @@ import {
   getStudentDetails,
   updateStudentDetails,
   getAllInfo,
+  getCompanyNames,
   studentsUnderCompany,
 } from "../controllers/student.controller.js";
 import {
@@ -38,6 +39,7 @@ router.route("/logout").post(logoutStudent);
 router.route("/").get(getData);
 router.route("/internship").get(getAllInfo("internship"));
 router.route("/internship/company/:companyName").get(studentsUnderCompany);
+router.route("/internship/company").get(getCompanyNames);
 router.route("/seminar").get(getAllInfo("seminar"));
 router.route("/:studId/seminar/marks").get(getStudentMarks("seminar"));
 router.route("/:studId/internship/marks").get(getStudentMarks("internship"));

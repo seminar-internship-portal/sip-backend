@@ -91,6 +91,65 @@ const getAllInfo = (evalType) => {
   });
 };
 
+const getCompanyNames = asyncHandler(async (req, res) => {
+  const academicYear = req.query.academicYear;
+
+  let pipeline = [];
+
+  if (academicYear) {
+    pipeline = [
+      {
+        $lookup: {
+          from: "students",
+          localField: "owner",
+          foreignField: "_id",
+          as: "owner",
+        },
+      },
+      {
+        $match: {
+          "owner.academicYear": academicYear,
+        },
+      },
+      {
+        $group: {
+          _id: "$companyName",
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          companyName: "$_id",
+        },
+      },
+    ];
+  } else {
+    pipeline = [
+      {
+        $group: {
+          _id: "$companyName",
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          companyName: "$_id",
+        },
+      },
+    ];
+  }
+
+  const companyList = await InternshipInfo.aggregate(pipeline);
+
+  res.status(200).json(
+    new ApiResponse(
+      200,
+      companyList.map((company) => company.companyName),
+      "Company list fetched successfully"
+    )
+  );
+});
+
 const studentsUnderCompany = asyncHandler(async (req, res) => {
   const companyName = req.params.companyName;
   const academicYear = req.query.academicYear;
@@ -499,6 +558,7 @@ const addInternshipDetails = asyncHandler(async (req, res) => {
 export {
   getAllStudents as getData,
   getAllInfo,
+  getCompanyNames,
   studentsUnderCompany,
   loginStudent,
   logoutStudent,
