@@ -8,6 +8,7 @@ import { EvaluationCriteria } from "../models/evaluationCriteria.model.js";
 import { SeminarInfo } from "../models/seminarFiles.model.js";
 import { InternshipInfo } from "../models/internshipFiles.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import mongoose from "mongoose";
 
 const generateAccessAndRefreshTokens = async (mentorId) => {
   try {
@@ -325,6 +326,33 @@ const updateMentorAvatar = asyncHandler(async (req, res) => {
     );
 });
 
+const getStudentInfoWithMarks = asyncHandler(async (req, res) => {
+  const studentId = req.params.id;
+
+  const data = await StudentEvaluation.find({
+    studentId,
+  })
+    .populate("evaluationCriteria")
+    .populate({
+      path: "studentId",
+      model: "Student",
+    });
+
+  const info = data[0].studentId;
+  const evals = data.map((doc) => ({
+    evaluationId: doc._id,
+    evalType: doc.evalType,
+    evaluationMarks: doc.marks,
+    name: doc.evaluationCriteria.name,
+    year: doc.evaluationCriteria.academicYear,
+    total: doc.evaluationCriteria.criteriaMarks,
+  }));
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, { info, evals }, "Data Fetched Successfully!"));
+});
+
 export {
   getAllMentors,
   loginMentor,
@@ -335,4 +363,5 @@ export {
   updateAccountDetails,
   studentAssigned,
   updateMentorAvatar,
+  getStudentInfoWithMarks,
 };

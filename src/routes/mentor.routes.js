@@ -9,6 +9,7 @@ import {
   updateAccountDetails,
   updateMentorAvatar,
   studentAssigned,
+  getStudentInfoWithMarks,
 } from "../controllers/mentor.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js";
@@ -24,6 +25,7 @@ router.route("/logout").post(logoutMentor);
 router.route("/").get(getAllMentors);
 router.route("/:uniqueId").get(getIndividualMentor);
 router.route("/studentAssigned/:mentorId").get(studentAssigned);
+router.route("/getStudentInfoWithMarks/:id").get(getStudentInfoWithMarks);
 
 router.route("/changeAvatar").post(upload.single("avatar"), updateMentorAvatar);
 
