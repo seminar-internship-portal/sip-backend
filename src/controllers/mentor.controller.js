@@ -327,10 +327,16 @@ const updateMentorAvatar = asyncHandler(async (req, res) => {
 });
 
 const getStudentInfoWithMarks = asyncHandler(async (req, res) => {
-  const studentId = req.params.id;
+  const mentorId = req.params.id;
+  const students = await Student.find({ mentorAssigned: mentorId });
 
+  if (!students || students.length === 0) {
+    throw new ApiError(404, "No Students found for the given Mentor");
+  }
+
+  const studentIds = students.map((student) => student._id);
   const data = await StudentEvaluation.find({
-    studentId,
+    studentId: { $in: studentIds },
   })
     .populate("evaluationCriteria")
     .populate({
@@ -338,8 +344,18 @@ const getStudentInfoWithMarks = asyncHandler(async (req, res) => {
       model: "Student",
     });
 
-  const info = data[0].studentId;
+  const info = students.map((student) => ({
+    studentId: student._id,
+    studentName: student.fullName,
+    studentroll: student.rollNo,
+    studentprn: student.prnNo,
+    studentreg: student.registrationId,
+    studentemail: student.email,
+  }));
+
   const evals = data.map((doc) => ({
+    studentId: doc.studentId._id,
+    studentName: doc.studentId.name,
     evaluationId: doc._id,
     evalType: doc.evalType,
     evaluationMarks: doc.marks,
@@ -348,9 +364,22 @@ const getStudentInfoWithMarks = asyncHandler(async (req, res) => {
     total: doc.evaluationCriteria.criteriaMarks,
   }));
 
+  const mergedData = info.map((studentInfo) => {
+    const studentEvals = evals.filter(
+      (evaluation) =>
+        evaluation.studentId.toString() === studentInfo.studentId.toString()
+    );
+    return {
+      ...studentInfo,
+      evaluations: studentEvals,
+    };
+  });
+
+  console.log("mergedData:", mergedData);
+
   res
     .status(200)
-    .json(new ApiResponse(200, { info, evals }, "Data Fetched Successfully!"));
+    .json(new ApiResponse(200, mergedData, "Data Fetched Successfully!"));
 });
 
 export {
