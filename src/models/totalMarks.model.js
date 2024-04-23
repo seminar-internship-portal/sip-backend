@@ -1,4 +1,6 @@
 import mongoose, { Schema } from "mongoose";
+import { EvaluationCriteria } from "./evaluationCriteria.model.js";
+import { StudentEvaluation } from "./studentEvaluation.model.js";
 
 const totalMarksSchema = new Schema({
   marks: { type: Number, default: 100 },
@@ -6,13 +8,25 @@ const totalMarksSchema = new Schema({
   academicYear: String,
 });
 
-totalMarksSchema.pre("updateOne", async function (next) {
+totalMarksSchema.pre("findOneAndUpdate", async function (next) {
   try {
     const docToUpdate = await this.model.findOne(this.getQuery());
 
     // Check if the marks field is being modified
-    if (this._update.$set && this._update.$set.marks) {
-      // Clear referenced records from the EvaluationCriteria model
+    if (this._update.marks && docToUpdate.marks !== this._update.marks) {
+      // clear from student evaluation
+      const currCriterias = await EvaluationCriteria.find({
+        academicYear: docToUpdate.academicYear,
+        evalType: docToUpdate.evalType,
+      });
+
+      for (const criteria of currCriterias) {
+        await StudentEvaluation.deleteMany({
+          evaluationCriteria: criteria._id,
+        });
+      }
+
+      // clear referenced records from the EvaluationCriteria model
       await EvaluationCriteria.deleteMany({
         academicYear: docToUpdate.academicYear,
         evalType: docToUpdate.evalType,

@@ -393,14 +393,6 @@ const updateTotalMarks = asyncHandler(async (req, res) => {
     { new: true, upsert: true }
   );
 
-  // Clear referenced records
-  if (totalMarks) {
-    await EvaluationCriteria.deleteMany({
-      academicYear,
-      evalType,
-    });
-  }
-
   res
     .status(200)
     .json(new ApiResponse(200, totalMarks, "Total marks updated successfully"));
@@ -452,7 +444,11 @@ const createCriteria = (evalType) => {
       academicYear,
     };
 
-    const existingCriteria = await EvaluationCriteria.find(criteria);
+    const existingCriteria = await EvaluationCriteria.find({
+      name: criteriaName,
+      evalType,
+      academicYear,
+    });
 
     if (existingCriteria.length)
       throw new ApiError(403, `${criteriaName} already exists!`);
